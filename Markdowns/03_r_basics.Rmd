@@ -17,22 +17,38 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Cincy Crash Data
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r cincy_crashes}
+crashes_per_day = 30125 / 365
+crashes_per_day
 
-```{r cars}
-summary(cars)
+
+crashes_by_day = c(2020, 2241, 2327, 2285,
+                   2380, 1866, 1664)
+names(crashes_by_day) = c("Mon", "Tue", "Wed", "Thu",
+                          "Fri", "Sat", "Sun")
+
+crashes_by_day > 2000        # seven answers -- returns a table of booleans per variable (day)
+crashes_by_day
+
+sum(crashes_by_day > 2000)   # days above 2,000
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+## Type of `crashes_by_day`
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r typeof_vec}
+typeof(crashes_by_day)
+
+crashes_by_day_int = c(2020L, 2241L, 2327L, 2285L,
+                   2380L, 1866L, 1664L)
+names(crashes_by_day_int) = c("Mon", "Tue", "Wed", "Thu",
+                          "Fri", "Sat", "Sun")
+
+typeof(crashes_by_day_int)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
