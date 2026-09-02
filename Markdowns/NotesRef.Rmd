@@ -1,0 +1,1665 @@
+---
+title: "Notes"
+author: "Dominic Sanchez"
+date: "2026-03-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Applied Regression Analysis (plain text)
+
+*Applied Regression Analysis* or _Applied Regression Analysis_ (italics)
+
+**Applied Regression Analysis** or __Applied Regression Analysis__ (bold)
+
+Applied Regression Analysis^ISA391^ (Superscripts)
+
+Applied Regression Analysis~ISA391~ (Subscripts)
+
+~~Applied Regression Analysis~~ (Strike through)
+
+[Miami University](https://miamioh.edu/) (link)
+
+# Applied Regression Analysis (Header 1)
+
+## Applied Regression Analysis (Header 2)
+
+### Applied Regression Analysis (Header 3)
+
+###### Applied Regression Analysis (Header 6)
+
+Inline equation: $A=\pi*r^2$
+
+Inline equation: $A=\pi*r^{2xy+8}$
+
+horizontal rule (or slide break)
+
+***
+
+> block quote
+
+* unordered list
+* item 2
+  + sub-item 1
+  
+1. ordered list
+2. item 2
+  + sub item1
+
+
+## R code
+```{r}
+x<-5
+y<-90
+v<-x+y+10
+v
+```
+
+# Others
+
+This is a sentence with a <span style="color: blue;">Dom</span> word.
+
+This is a sentence with a <span style="color: red;">Sanchez</span> word.
+
+
+
+# inline comment (in r script)
+
+
+#############################################################################
+***
+
+# Matrix, Vectors, Data Frames, Basic Operations, Random Numbers
+
+```{r}
+my_matrix <- matrix(c(1, 2, 3, 4, 5, 6), nrow = 2, ncol = 3) # c means combine
+my_matrix
+my_matrix[1,2] # row, column
+my_matrix_two <- matrix(c(1, 2, 3, 4, 5, 6), nrow = 2, ncol = 3, byrow = TRUE) # will fill in values by row instead of columns
+my_matrix_two
+```
+
+```{r}
+## Creating a dataframe
+my_dataframe <- data.frame(name = c("John", "Jane", "Bob"), age = c(25, 30, 35), salary = c(50000, 60000, 70000))
+## Above data.frame() function defined a data table, with three variables with equal # of values
+## allows each column to have a different type of data
+### treats rows as cases (observations) and columns as variables
+my_dataframe
+my_dataframe$name
+
+row_2 <- my_dataframe[2,] # selects second row; [,2] selects second column
+
+column_names <- colnames(my_dataframe) # print column names
+
+maxdisp <- max(mtcars$disp) 
+mtcars[which(mtcars$disp==maxdisp),] # shows row of largest value of disp dataframe -- [row, column] -- leave on blank if want entire row/column
+
+mtcars$group <- 'Domestic' ## separates all cars in dataset to two groups (domestic and imported)
+mtcars[c(1:3, 8:14, 18:21, 26:28, 30:32), ]$group <-'Imported' # all rows 1:3, 8:14, etc. become imported
+head(mtcars)
+```
+
+```{r}
+# Create a vector of numbers
+v <- c(1, 2, 3, 4, 5)
+# v <- c(1:5) # c combines the values into a vector or list
+
+## Can add two vectors together -- c(1,2,3) + c(4,5,6) = (5,7,9) -- remains a vector
+
+v[2] # calls second value in vector
+
+my_vector <- c(seq(50.5,100,0.5)) # create a vector from sequence of numbers 50.5 to 100 with increment of 0.5
+my_vector
+
+mean(v)
+
+sum(v)
+sum(diamond$carat==2) # logic approach, if = 2 --> return 1, then sum all 1's -- taking subset of data
+
+
+max(v)
+maxdisp <- max(mtcars$disp) 
+mtcars[which(mtcars$disp==maxdisp),] # shows row of largest value of disp dataframe
+
+min(v)
+
+median(v)
+
+sd(v)
+
+var(v)
+var(y) # sample variance of y
+summary(customer.reg)$sigma^2 # regression MSE -- use anova table
+MSE <- anova.mv$`Mean Sq`[3] # gets MSE
+```
+
+```{r}
+## Packages and Libraries and functions
+
+# Create some data to plot
+x <- rnorm(100, mean = 0, sd = 1) # generate random numbers from N(0,1), Assign them to the variable/vector
+## rnorm() function is to generate random numbers from a normal distrbution. 
+y <- rnorm(100)
+
+z <- rnorm(25, mean = 50, sd = 6)
+# brackets [] tell location of numbers ( [1] means thats the first number in the dataset )
+
+
+# Create scatterplot
+plot(x,y, main = "Scatter Plot", xlab = "x", ylab = "y")
+# inside a function, always use =; when creating a variable, use <-
+```
+
+
+
+
+#############################################################################
+***
+
+## Charts and Math
+
+# Tables
+```{r}
+data(mtcars) # importing a data set
+
+class(mtcars) # check the type of the data
+
+str(mtcars) # get a summary of the dataset
+
+summary(mtcars) # gives summary statistics for each variable (5 number summary)
+
+nrow(mtcars)
+ncol(mtcars)
+dim(mtcars) # row x column; dimensions
+
+head(mtcars) # show first 6 rows - default
+head(mtcars, 10) # show first 10 rows
+tail(mtcars) # show last 6 rows
+
+table(mtcars$cyl) #frequency table
+table(mtcars$cyl,mtcars$vs) # contingency table
+
+tbl <- table(mtcars$gear) # count how many times each value appears in a vector (creates a frequency table)
+addmargins(tbl) # allows to add margins to the table (sum rows/columns)
+ftable(tbl) # creates a flat table to more clearly separate labels and values
+
+typeof(customer.reg) # list
+class(customer.reg) # lm
+
+pclass1 <- subset(titanic_train, Pclass == 1) ## get a subset of the data
+pclass3 <- subset(titanic_train, Pclass == 3)
+
+```
+
+# Graphs
+
+```{r}
+stem(mtcars$wt) # need a quantitative variable
+
+
+### Barplots
+
+geartype <- table(mtcars$gear)
+barplot(geartype, main = "Frequency of each gear type", xlab = "Gear Type", ylab = "Frequency", col = "lightblue")
+
+## or ##
+
+geartype <- table(mtcars$gear)
+gear_numbers <- names(geartype)
+
+labels <- paste0("Type ", gear_numbers)
+
+barplot(geartype,
+        names.arg = labels,
+        xlab = "Gear Types",
+        ylab = "Total # of Each Type",
+        col = c("green","red","blue"))
+
+barplot(table(mtcars$cyl, mtcars$gear), # second one listed will be 
+        main = "Stacked bar chart",
+        xlab = "Gear type",
+        ylab = "Frequency",
+        legend.text = rownames(table(mtcars$gear, mtcars$cyl)))
+
+##this one works
+gear_cyl = table(mtcars$cyl, mtcars$gear)
+
+barplot(gear_cyl, 
+        main = "Distribution of Gear vs Cyclinders",
+        names.arg = paste("Gear", colnames(gear_cyl)),  # labels doesn't exist in barplot, use names.arg
+        xlab = "Gear Types", 
+        ylab = "Frequency",
+        col = c("blue", "red", "yellow"))
+
+## barchart needs to be from a table
+
+legend("topright",
+       paste("Cylinder", rownames(gear_cyl)),
+       cex = 1.3,
+       fill = c("blue", "red", "yellow"))
+
+
+### Histograms
+
+
+hist(mtcars$mpg,
+     breaks = 1, # breaks + 1 = number of bars
+     main = "Histogram of miles per gallon",
+     xlab = "Mpg",
+     ylab = "Frequency",
+     col = "blue")
+
+#doesn't work
+hist(mpg ~ wt,
+     data = mtcars,
+     main = "Histogram of miles per gallon",
+     xlab = "Mpg",
+     ylab = "Frequency",
+     col = "red")
+
+
+### Density Plots
+
+plot(density(mtcars$mpg)) 
+
+
+### Boxplots
+
+boxplot(mtcars$mpg, ylab = "Miles per Gallon")
+
+boxplot(mpg ~ cyl, # normally ~ in r means "by"
+        data = mtcars,
+        xlab = "Number of Cylinders",
+        ylab = "Miles per Gallon")
+
+boxplot(wt ~ cyl,
+        data = mtcars,
+        xlab = "Number of Cylinders",
+        ylab = "Weight (1000lbs)")
+
+
+### Pie charts
+
+slices = table(mtcars$carb)
+proportions <- round(100*slices/sum(slices), 1) # calculate %, and round to 1 digit
+slice_labels <- proportions # percentages show up on slices
+legend_labels <- paste0("Carburetor-", names(slices))
+
+
+pie(slices,
+    col = rainbow(length(slices)),
+    labels = proportions,
+    main = '% of Carburetors',
+    cex = 0.8) # magnifies the text, default is 1
+
+legend("topright", 
+       legend_labels,
+       cex = 0.8,
+       fill = rainbow(length(slices)))
+
+## or ##
+
+slices = table(mtcars$carb)
+proportions <- round(100*slices/sum(slices), 1) # calculate %, and round to 1 digit
+slice_labels <- proportions # percentages show up on slices
+legend_labels <- paste0("Carburetor-", names(slices))
+
+
+pie(slices,
+    col = rainbow(length(slices)),
+    labels = proportions,
+    main = '% of Carburetors',
+    cex = 0.8) # magnifies the text, default is 1
+
+legend("topright", 
+       c("Carburetor-1",
+         "Carburetor-2",
+         "Carburetor-3",
+         "Carburetor-4",
+         "Carburetor-6",
+         "Carburetor-8"),
+       cex = 0.8,
+       fill = rainbow(length(slices)))
+
+
+## Scaterplots
+
+plot(mtcars$hp,
+     mtcars$mpg,
+     main = "Scatterplot of Gross Horsepower and Miles per Gallon",
+     xlab = "Gross Horsepower",
+     ylab = "Mpg")
+
+fit <- lm(mpg ~ hp, data = mtcars) # gets data to make a line of best fit
+abline(fit, col = "lightblue", lwd = 2) # fits the line, lwd is thickness of the line
+
+plot(Sale_Price ~ Market_Val, # Sales price by market value
+     data = price,
+     main = "Sales Prices of Houses in Tampa, FL vs Total Appraised Value",
+     xlab = "Total Appraised Value",
+     ylab = "Sales Price")
+
+```
+
+
+#############################################################################
+***
+
+## Confidence Interval, T-Tests, Prediction Intervals
+
+```{r}
+predictions = 4.82915 + 0.43986 * customer$salary
+predictions # stores a vector of all predicted values within the data file
+
+residuals <- customer$salary - predictions # stores the residuals in a vector
+```
+
+```{r}
+customer.reg <- lm(willingness ~ salary, data = customer) # creates a linear regression model
+
+summary(customer.reg)
+names(summary(college.reg))
+round(coef(model10), 3) # returns a dataframe of all of the rounded coefficients
+```
+
+### Storing coefficients
+
+```{r}
+b0 <- price.reg$coefficients[1]
+b1 <- price.reg$coefficients[2]
+```
+
+Returns:
+(Intercept) 
+   1.358681 
+Market_Val 
+  1.408271 
+
+**Do this -- returns just the numbers**
+
+```{r}
+b0 <- summary(college.reg)$coefficients[1]
+b1 <- summary(college.reg)$coefficients[2]
+```
+
+**Anova table and SSE, MSE..**
+
+```{r}
+anova.reg <- anova(price.reg)
+anova.reg
+```
+
+```{r}
+MSE <- anova.reg$`Mean Sq`[2]
+SE <- sqrt(MSE) # SE of the residuals
+
+SSR <- anova.reg$'Sum Sq'[1]
+SSE <- anova.reg$'Sum Sq'[2]
+SST <- SSR + SSE
+SST
+
+SEb1 <- summary(college.reg)$coefficients[2,2]
+
+r <- cor(price$Market_Val, price$Sale_Price) # x, y
+rsqr <- summary(price.reg)$r.squared
+adj.r.sq <- summary(cars.reg)$adj.r.squared
+
+college.res <- resid(college.reg) # create an object that contains the residuals
+mean(college.res)
+
+resid <- college.res**2 # squared residuals --> this is a vector of squared residuals --> sum of this = SSE
+
+
+
+### Compute SSE, SSR, and SST using their definitions/formulas introduced in the class. 
+
+
+SSE <- sum((credit$Balance - credit.reg$fitted.values)^2)
+SSE
+
+SSR <- sum((credit.reg$fitted.values - mean(credit$Balance))^2)
+SSR
+
+SST <- SSR + SSE
+SST
+
+SST2 <- sum((credit$Balance - mean(credit$Balance))^2)
+SST2
+
+
+
+## Calculate sigma, MSE, and SSE 
+
+theta <- summary(credit.reg)$sigma
+theta
+# se <- sqrt(anova(reg1)$'Mean Sq'[7])
+
+MSE <- theta^2
+MSE 
+
+SSE2 <- MSE * df2
+SSE2
+```
+
+Se(e) = sqrt(var(e)) = sqrt(MSE) = RMSE
+s^2 = SSE / n-2(df) = MSE 
+SSE = sum(residuals^2)
+rsq = SSR/SST
+
+**Hypothesis Test**
+
+```{r}
+t <- summary(wine.reg)$coefficients["x", "t value"] ## refers to row, column
+cat("t:", t, "\n") 
+  
+p <- summary(wine.reg)$coefficients["x", "Pr(>|t|)"]
+cat("p-value:", p, "\n")
+
+cat("df:", wine.reg$df.residual, "\n")
+
+
+
+## to get sample n (df + 2 = n)
+df.residual(wine.reg) + 2
+
+
+
+t <- summary(wine.reg)$coefficients["x", "t value"]
+cat("t:", t, "\n") 
+  
+p <- summary(wine.reg)$coefficients["x", "Pr(>|t|)"]
+cat("p-value:", p, "\n")
+
+cat("df:", wine.reg$df.residual, "\n")
+```
+
+**Confidence Interval & Prediction Interval**
+
+```{r}
+slopeint <- confint(price.reg, level = 0.95)
+slopeint[2,] # returns just the confidence interval numbers
+
+
+class1int <- t.test(pclass1$Fare, conf.level = 0.95)$conf.int
+```
+
+```{r}
+meanint <- predict(wine.reg,
+                   interval = "confidence",
+                   newdata = data.frame(x = 0.5), # can use c() to get multiple
+                   level = 0.95)
+
+cat("Confidence interval for mean when 0.5 tannins: (", meanint[,"lwr"], ", ", meanint[,"upr"], ")", sep = "") ## [all rows (only 1 row), lower bound]
+```
+
+```{r}
+predint <- predict(wine.reg,
+                   interval = "prediction",
+                   newdata = data.frame(x = 0.5),
+                   level = 0.95)
+
+cat("Prediction interval for mean when 0.5 tannins: (", predint[,"lwr"], ", ", predint[,"upr"], ")", sep = "")
+
+## Can do vector for multiple predictions
+
+predictions <- data.frame(carat = c(0.4,0.43,0.5)) # these values are in a data frame, so need to specify columns as well when referencing
+
+pred <- predict(diamond.reg,
+                newdata = predictions) # will create a vector of the predictions / point estimates
+
+
+cat(predictions[1,1], " carats: $", pred[1], "\n", sep = '')
+cat(predictions[2,1], " carats: $", pred[2], "\n", sep = '')
+cat(predictions[3,1], " carats: $", pred[3], "\n", sep = '')
+
+## go next step to calculate residuals
+
+price.obs <- c(750, 1000, 1700)
+
+resid <- pred - price.obs
+
+cat(predictions[1,1], " carats residual: ", resid[1], "\n", sep = '')
+cat(predictions[2,1], " carats residual: ", resid[2], "\n", sep = '')
+cat(predictions[3,1], " carats residual: ", resid[3], "\n", sep = '')
+```
+
+## Interpretations
+
+**B~0~ = 4.8292 (intercept): When the customers salary is $0, the predicted customer's willingness to pay is $4,892. This is not a practical prediction as it doesn't make sense for someone to have a willingness to pay of $4,892 when they have a salary of $0. Also the data point for the intercept is far outside the range of the observations, making it an extrapolation.**
+
+**B~1~ = 0.4399 (slope): For every $1,000 increase in the customers salary, their predicted willingness to pay will increase by $439.90.**
+
+**$\hat{willingness} = 4.82915 + 0.43986 * salary$**
+
+#### Four step hypothesis test
+
+**H~0~: $\beta = 0$**   
+**H~A~: $\beta \neq 0$**
+
+\[
+H_0: \beta_1 = \beta_2 = \beta_3 = \beta_4 = \beta_5 = \beta_6 = 0
+\]
+
+\[
+H_a:\text{at least one } \beta_i \ne 0
+\]
+
+**t = 38.13216**  
+**p-value = 2.112051e-50**  
+**Conclusion: Since p-value (0) < $\alpha$ (0.05), we reject H~0~. We have enough evidence that there is a significant linear relationship between Market Value and Sales Prices of properties in Tampa, Florida.**
+
+### Confidence Intervals
+
+**We 95% confidence that when the market value of the house increases by $1,000, the sales price will increase by $1,335 to $1,482 on average.**
+
+**We are 95% confident that true mean average perceived astrigency is between -0.384 and -0.168 for all wine with 0.5 tannins.**
+
+**We are 95% that for a single wine with 0.5 tannins, the predicted perceived astringency will be between -0.803 and 0.251.**
+
+
+## Assumptions
+
+### Assumption: Randomly Selected --> independent (e)
+
+### Assumption 1: Mean of residuals is 0
+
+```{r}
+wine.res <- wine.reg$residuals
+
+meanresid <- mean(wine.res)
+meanresid
+```
+
+**Since the mean of the residuals is almost 0, we can check this assumption.**
+
+
+### Assumption 2: Linearity
+
+```{r}
+plot(wine$x, 
+     wine$y, 
+     main = "Scatterplot of Tannins vs Astrigency",
+     xlab = "Amount of Tannins",
+     ylab = "Astrigency")
+```
+
+**The scatterplot of astrigency by tannins shows a positive linear relationship.**
+
+
+### Assumption 3: Equal Variance Assumption
+
+```{r}
+plot(wine.reg$fitted.values,
+     wine.res,
+     main = "Residuals vs Fitted Values",
+     xlab = "Predicted Astringency",
+     ylab = "Residuals")
+
+abline(0,0)
+```
+
+**The residual plot shows no clear pattern and roughly constant spread, so this assumption is reasonable.**
+
+### Assumption 4: Normality
+
+```{r}
+hist(wine.res,
+     main = "Histogram of Residuals")
+
+qqnorm(wine.res) ## of residuals
+qqline(wine.res)
+
+
+## multiple regression
+normplot <- qqnorm(res) # can't tell what is x and y based on this graph if we want to identify points
+qqline(res)
+
+normplot # $x, $y
+
+identify(normplot$x, normplot$y)
+```
+
+**Since the normal probability plot curves and the histogram of residuals shows a skew, we can't check this assumption.**
+
+#############################################################################
+***
+
+## Importing data
+
+```{r}
+customer <- read.csv("Quiz_L6_Data.csv", # set working directory (session)
+                     header = TRUE,
+                     sep = ",", # excel files are comma delimited; txt files are '' (no separation)
+                     stringsAsFactors = TRUE) # turns categorical values into factors
+customer
+```
+
+
+## Debugging
+
+na.rm = TRUE -- means it will remove null values (missing data) before doing the calculation
+
+
+#### Multiple Regression ####
+
+## Scatterlpot matrix
+
+```{r}
+# create a scatterplot matrix for each pair of variables in the data set 
+pairs(mvdata)
+
+# use ~ to get scatterplot matrix for only specified variables (start with ~)
+pairs(~Mkt_Value_1000s + Sqr_Ft + House_Age, data = mvdata) 
+
+
+plot(exp) ## also can do this to create scatterplots of all variables
+
+
+## Correlation matrix
+## get a correlation matrix to check their relationship
+cor(exp)
+round(cor(exp), 2) ## round values to 2 digits
+```
+
+
+## Multiple regression model
+
+```{r}
+fit.mv <- lm(Mkt_Value_1000s ~ Sqr_Ft + House_Age, data = mvdata)
+
+# model of all main effects excluding variables
+model7 <- lm(lnLOWBID ~ . - DOTEST - LOWBID, data = flag)
+```
+
+
+## Assumptions
+
+1) mean of residuals = 0
+2) equal variance
+3) normality
+4) linearity (scatterplots of y by each x)
+
+
+## F test
+
+```{r}
+# obtain the p-value based on the F test statistics and df1, df2
+1-pf(24.4, 2, 39)
+# pf(q, df1, df2, ncp)
+# q = f-test statistic
+# pf() provide the left-tail probability
+
+# or
+
+pf(24.4, 2, 39, lower.tail = FALSE) # lower.tail - TRUE Iin default to get the cumulative probability (cdf)
+
+
+df1 <- summary(credit.reg)$fstatistic["numdf"] # or df1 <- k
+# summary(credit.reg)$fstatistic[2]
+
+df2 <- summary(credit.reg)$fstatistic["dendf"] # or df2 <- n - k - 1
+
+p.val <- 1 - pf(ftest, df1, df2)
+
+
+
+# F distribution examples
+
+x <- seq(0, 10, length = 10000)
+h <- df(x, 4, 30)
+h1 <- df(x, 10, 30)
+h2 <- df(x, 20, 500)
+
+plot(x, h, main = "F-distribution", ylab = "Density", ylim = c(0,2))
+lines(x, h1, col = "red")
+lines(x, h2, col = "blue")
+
+### As df 2 increasing, shape becoming more symetrical; df1 increasing, center moves right
+
+
+## Calculating ftest using formula
+
+k <- length(coef(credit.reg)) - 1 # number of predicts
+n <- nrow(credit)
+
+ftest <- (SSR/k) / (SSE/(n -(k+1)))
+ftest
+
+
+summary(credit.reg)$fstatistic[1]
+```
+
+
+## T test
+
+```{r}
+# Get the p-value based on the t test stat
+
+pt(6.109, 39, lower.tail = FALSE) * 2 ## t test here is two-tailed test because b != 0
+
+# or
+
+pt(-6.109, 39, lower.tail = TRUE) * 2 ## getting the lower tail (left tail) area then x 2
+```
+
+
+## Predictions
+
+```{r}
+# predict market value of a 25 year old house with 1500 sqft
+
+predict(fit.mv, newdata=data.frame(House_Age=25, Sqr_Ft = 1500))
+
+predict(fit.mv, newdata = data.frame(House_Age = c(25, 15, 8), Sqr_Ft = c(1500, 1350, 1408))) # predictions for three separate data points
+# newdata = predictions -- if you have predictions on a csv file
+
+
+# get the C.I of the mean market value 
+predict(fit.mv, 
+        newdata = data.frame(House_Age = c(25, 15, 8), Sqr_Ft = c(1500, 1350, 1408)),
+        interval = "confidence",
+        level = 0.95)
+
+# get the P.I. of the predicted market value for a single 25 year old house with 1500 square feet
+predict(fit.mv, 
+        newdata = data.frame(House_Age = c(25, 15, 8), Sqr_Ft = c(1500, 1350, 1408)),
+        interval = "prediction",
+        level = 0.95)
+
+# prediction to account for centered variables
+predict(model2, 
+        newdata = data.frame(Income.cnt = 50 - mean_inc, Rating.cnt = 355 - mean_rating, Limit.cnt = 4700 - mean_limit),
+        interval = "confidence",
+        level = 0.95)
+
+
+# prediction for single values for all three categories of the dummy variable
+predict(model3, 
+        newdata = data.frame(Income.cnt = 50 - mean_inc, # one income value
+                             Rating.cnt = 355 - mean_rating, # one rating value
+                             Limit.cnt = 4700 - mean_limit,  # one limit value
+                             Group = c("A", "B", "C"))) # all three categories
+```
+
+
+## Removing Data Points / Identifying Outliers
+
+```{r}
+## Lecture 13
+which.max(res) # shows the max residuals so that we can remove it from the data 
+which(res > 20)
+
+plot(fit.mv$fitted.values, res,
+     ylab = "Residuals",
+     xlab = "Fitted Values",
+     main = "Residuals vs Fitted Values")
+abline(0,0)  
+
+which(fit.mv$fitted.values > 265)
+
+
+identify(fit.mv$fitted.values, res) # need to run residual plot first so that you 
+                  # have a cursor that tells you the id of the houses; locator active --> finish after clicking point
+
+
+
+mv.data_1 <- mvdata[-42, ] # remove the whole 42nd row the remove the outlier; keep the columns
+
+fit.mvdata_1 <- lm(Mkt_Value_1000s ~ House_Age + Sqr_Ft, data = mv.data_1)
+
+
+plot(fit.mv$fitted.values, res,
+     ylab = "Residuals",
+     xlab = "Fitted Values",
+     main = "Residuals vs Fitted Values")
+abline(0,0)  
+
+identify(fit.mv_1$fitted.values, fit.mvdata_1$residuals)
+
+which(fit.mvdata_1$fitted.values>265)
+
+mvdata_2 <- mv.data_1[-c(14,15), ] # removing the remaining outliers
+fit.mvdata_2 <- lm(Mkt_Value_1000s ~ House_Age + Sqr_Ft, data = mvdata_2)
+summary(fit.mvdata_2) # r-squared dropped after removing those two points --> want them in the data
+
+
+
+# identifying outliers using IQR
+
+Q1 <- quantile(fit.mv$residuals, level = .25) # want 25th quantile of the residuals
+Q3 <- quantile(fit.mv$residuals, level = .75)
+
+IQR_Value <- IQR(fit.mv$residuals)
+
+lower <- Q1 - 1.5 * IQR_Value
+upper <- Q3 + 1.5 * IQR_Value
+
+which(fit.mv$residuals < lower | fit.mv$residuals > upper) # comma in between means AND (intersection), not or
+# | means AND 
+lower
+ #### Not working, look at how lower is formatted
+```
+
+
+
+## Full (complete) second order model
+
+**second order refers to variables to the second power**
+**full has interaction terms**
+
+```{r}
+## A full second order regression: 
+exp$Weight.sq<- exp$Weight^2
+exp$Distance.sq<- exp$Distance^2
+exp$Weight_Distance <- exp$Weight*exp$Distance
+
+exp.reg.full <- lm(Cost~Distance+Weight+Weight_Distance+Weight.sq +Distance.sq,data=exp)
+summary(exp.reg.full)
+
+
+exp.reg.full <- lm(Cost~Distance+Weight+Weight_Distance+I(Distance^2)+I(Weight^2),data=exp)
+summary(exp.reg.full)
+
+
+exp.reg.full <- lm(Cost~Distance+Weight+Distance:Weight+I(Distance^2)+I(Weight^2),data=exp)
+summary(exp.reg.full)
+
+
+exp.reg.full <- lm(Cost~Distance*Weight+I(Distance^2)+I(Weight^2),data=exp)
+summary(exp.reg.full)
+
+
+exp.reg.full <- lm(Cost~(Weight+Distance)^2 +  I(Distance^2) + I(Weight^2),  data=exp)
+summary(exp.reg.full)
+
+
+# Model of main effects exluding DOTEST; including itneraction term
+model10 <- lm(lnLOWBID ~ . - DOTEST - LOWBID + DISTRICT:RDLNGTH, data = flag)
+
+
+## R formulas have special symbols like:
+  
+##  + → add terms
+##  : → interaction
+##  ^ → interaction expansion
+##  * → main effects + interaction
+##  I()→ mathematical expression  
+
+
+Model1 <- lm(DemandY ~ PriceX1 * IndPriceX2, data = fresh)
+
+#lm(DemandY ~ PriceX1 + IndPriceX2 + PriceX1:IndPriceX2, data = fresh)
+#lm(DemandY ~ (PriceX1 + IndPriceX2)^2, data = fresh)
+```
+
+**Example: `formula = Balance~Income + Rating + Income:Rating`**
+          
+**Model**:  $E(y)=\beta_0 + \beta_1\times Income +\beta_2\times Rating + \beta_3 \times Income\times Rating$
+
+
+
+
+* `formula = Balance~(Limit + Rating)^2`
+
+**Model**:  $E(y)=\beta_0 + \beta_1\times Income +\beta_2\times Rating + \beta_3 (Income\times Rating)$
+
+
+
+
+* `formula = Balance~(Income + Rating)^2 + I(Income^2) + I(Rating^2)`
+
+**Model**: $E(y)=\beta_0 + \beta_1\times Income +\beta_2\times Rating + \beta_3 (Income\times Rating) + \beta_4 \times Income^2 + \beta_5 \times Rating^2$ 
+
+
+
+
+* `formula = Balance~(Limit + Rating + Income)^2`
+
+**Model**: $E(y)=\beta_0 + \beta_1\times Limit +\beta_2\times Rating + \beta_3 \times Income + \beta_4 (Limit \times Rating) + \beta_5 (Limit \times Income) + \beta_6 (Rating \times Income)$ 
+
+
+
+
+
+* `formula = Balance~(Limit + Rating + Income)^2 + I(Limit^2) + I(Rating^2) + I(Income^2)`
+
+**Model**: $E(y)=\beta_0 + \beta_1\times Limit +\beta_2\times Rating + \beta_3 \times Income + \beta_4 (Limit \times Rating) + \beta_5 (Limit \times Income) + \beta_6 (Rating \times Income) + \beta_7 \times Limit^2 + \beta_8 \times Rating^2 + \beta_9 \times Income^2$ 
+
+
+
+
+## Interpretations
+
+Slope - `Limit`: When income, rating, cards, age, and education are held constant, when the cc limit increases by $1, the predicted balance will increase by $0.13.
+
+Rsq - 87.78% of the variation in Balance can be explained by using the model with all the predictors.
+
+\[
+H_0: \beta_1 = \beta_2 = \beta_3 = \beta_4 = \beta_5 = \beta_6 = 0
+\]
+
+\[
+H_a:\text{at least one } \beta_i \ne 0
+\]
+
+
+Decision: Since p-value (0) < $\alpha$ (0.05), we reject H~0~. We have enough evidence that the model with all predictors has a significant effect on the total balance owed.
+          Since p-value (~ 0) < \alpha (0.05), we reject H~0~. We have enough evidence that the model is signifcant at predicting demand.
+
+
+
+Interaction term significance: Since p-value (0.115) > \alpha (0.05), we reject H~0~. We don't have enough evidence that the interaction term between Price and average industry price has a significant effect on the model.
+
+      There is not a statistically significant interaction between detergent price and the competitor's industry price in the model.
+      
+Dummy Variable: Keeping Income, rating, and Limit constant, compared to Group A, Group by has a higher balance by $8.
+
+
+
+## Removing predictors
+
+```{r}
+credit.reg2 <- lm(Balance ~ Income + Limit + Rating + Cards + Age, data = credit)
+# credit.reg2 <- m(Balance ~ . - Education, data = credit)
+summary(credit.reg2)
+
+credit.reg3 <- lm(Balance ~ Income + Limit + Rating + Age, data = credit)
+# credit.reg3 <- m(Balance ~ . - Education - Cards, data = credit) # or - (Education + Cards)
+```
+
+
+
+## Interaction Terms
+
+```{r}
+exp$Weight_Distance <- exp$Weight * exp$Distance ## create new interaction term (x3)
+
+### Center the predictors by x-mean(x) -- creating variables by hand
+
+exp$Weight.cnt <- exp$Weight - mean(exp$Weight)
+exp$Distance.cnt <- exp$Distance - mean(exp$Distance)
+exp$Weight_Distance.cnt <- exp$Weight.cnt * exp$Distance.cnt
+
+
+### The ':' symbol indicates to R to create the interaction column for Distance and Weight
+exp2.reg <- lm(Cost ~ Weight + Distance + Distance:Weight, data = exp2)
+
+# The * operator automatically expands into main effects + interaction terms
+exp2.reg <- lm(Cost~Distance*Weight, data=exp2)
+
+# The ^2 stands for main effect + all possible interaction terms up to 2 factors
+exp.reg2 <- lm(Cost~(Weight + Distance)^2, data = exp2) # the ^2 doesn't stand for the square of anything
+
+
+# creating squared variable
+
+exp$Distance.sq<- exp$Distance^2
+# You need to use the I() operator to create the quadratic effect. I() treats an expression as a standard mathematical operation. 
+# Recall that the ^2 in lm() is not a square function, use I(^2)for squared terms.  
+
+# I(x^2) tells R: “literally square x"
+# ^ has a special meaning in formulas: it indicates interactions up to a certain degree.
+
+exp.reg.sq <- lm(Cost~Distance + I(Distance^2), data=exp) 
+
+# Plot this equation over the range of centered distance. 
+dist <- seq(-100,100)
+yhat <- 7.164+0.045*dist-0.0002*dist^2
+
+plot(dist, yhat, xlab="Centered Distance",ylab="Estimated Cost",  
+     ylim=c(0,20), xlim=dist, type="l")
+
+```
+
+
+### Why do we center variables before building regression models? Does the centering help to improve the model in this case?
+
+Centering often reduces the correlation between the individual variables and the higher order terms -- want to reduce high correlation
+
+
+### do predictions change between a centered and not centered model of same variables
+
+Doesn't matter whether the data is centered or not, the prediction won't change.
+  it just tells new story about whether or not the interaction term is significant or not
+
+
+
+## Interaction Term Plot
+
+```{r}
+###### Understand the interaction by plotting it ######
+
+# Step 1: Calculate the fixed values for one variable
+
+weight_low <- mean(exp$Weight) - sd(exp$Weight)
+weight_low
+
+weight_med <- mean(exp$Weight)
+weight_med
+
+weight_high <- mean(exp$Weight) + sd(exp$Weight)
+weight_high
+
+
+# Step 2: Let the other variable change. Create three columns of data using the least squares equation
+
+Cost_Low <- 6.078 + 1.236 * weight_low + 0.039 * exp$Distance + 0.008 * weight_low * exp$Distance
+
+Cost_Medium <- 6.078 + 1.236 * weight_med + 0.039 * exp$Distance + 0.008 * weight_med * exp$Distance
+
+Cost_High <- 6.078 + 1.236 * weight_high + 0.039 * exp$Distance + 0.008 * weight_high * exp$Distance
+
+Cost_Low
+Cost_Medium
+Cost_High
+
+
+# Step 3: Plot each of the series you created in Step 2 vs the variable you let change
+
+plot(exp$Distance, Cost_Low, type = "l", xlab = "Centered Distance", ylab = "Cost", ylim = c(0,20), xlim = c(-100,100)) # type = l means line so that it connects the points rather than graphic the points
+## can start without limits, and add if necessary too instead of adjusting
+lines(exp$Distance, Cost_Medium, col = "red")
+lines(exp$Distance, Cost_High, col = "blue")
+legend(-100, 15, legend = c("Low Weight", "Medium Weight", "High Weight"), col = c("black", "red", "blue"), lty = 1, cex = 0.6) # weight = depended variable
+## legend(x position on graph, y position on graph, ...)
+
+## same thing just without comments to copy and paste
+plot(exp$Distance, Cost_Low, type = "l", xlab = "Centered Distance", ylab = "Cost", ylim = c(0,20), xlim = c(-100,100))
+lines(exp$Distance, Cost_Medium, col = "red")
+lines(exp$Distance, Cost_High, col = "blue")
+legend(-100, 15, legend = c("Low Weight", "Medium Weight", "High Weight"), col = c("black", "red", "blue"), lty = 1, cex = 0.6) 
+
+
+
+## x2=0,1,2, and let x1 vary. 
+
+x1<-c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+
+y_x2_0 <- 1+7*x1-x1^2
+y_x2_1 <- 1+7*x1-10+5*x1-x1^2+3
+y_x2_2 <- 1+7*x1-20+10*x1-x1^2+12
+
+#or
+y_x2_0 <- 1+7*x1-x1^2
+y_x2_1 <- -6+12*x1-x1^2
+y_x2_2 <- -7+17*x1-x1^2
+
+
+plot(x1, y_x2_0, 
+     type="l", xlab="x1", ylab="E(y)", 
+     ylim=c(-35, 70), xlim=c(0,11),  
+     yaxs="i", xaxs="i") 
+
+lines(x1, y_x2_1, col="blue")
+lines(x1, y_x2_2,  col="red")
+
+legend(1, 60, legend=c("x2=0", "x2=1", "x2=2"),
+       col=c("black", "blue", "red"), lty=1, cex=0.8)
+
+
+
+
+################ Create an higher-order effect plot to understand their relationship. ##############
+
+## Since the quadratic effect of Distance is not significant, we will look at how different values of Weight affect the relationship between distance and Cost.  
+
+# Step 1: Calculate the fixed values for one variable.
+
+Weight_low <- mean(exp$Weight)-sd(exp$Weight)
+Weight_low
+
+Weight_med <- mean(exp$Weight)
+Weight_med
+
+Weight_high <- mean(exp$Weight)+sd(exp$Weight)
+Weight_high
+
+
+# Step 2: Let the other variable change.  Create three columns of data using the least squares equation.
+
+Cost_Low <- 5.5 + 1.26*Weight_low + 0.04*exp$Distance + 0.007*Weight_low*exp$Distance+ 0.0002*exp$Distance^2+ 0.09*Weight_low^2
+
+Cost_Medium <-5.5 + 1.26*Weight_med + 0.04*exp$Distance + 0.007*Weight_med*exp$Distance+ 0.0002*exp$Distance^2+0.09*Weight_med^2
+
+Cost_High <- 5.5 + 1.26*Weight_high + 0.04*exp$Distance + 0.007*Weight_high*exp$Distance+ 0.0002*exp$Distance^2+0.09*Weight_high^2
+
+
+
+# Step 3: Plot each of the series you created in Step 2 vs. the variable you let change.  Note the y axis is predicted values of the response.
+
+plot(exp$Distance, Cost_Low, type="p", xlab="Centered Distance",
+     ylab="Cost", ylim=c(0, 20))
+
+points(exp$Distance, Cost_Medium, col="red")
+points(exp$Distance, Cost_High, col="blue")
+legend(-100, 15, legend=c("Low Weight", "Medium Weight", "High Weight"), 
+       col=c("black","red", "blue"), pch=21, cex=0.6)
+
+## We can see that the effect of Distance to Cost doesn't quite depends on Cost, kind of constant effect. 
+
+
+
+### Another example
+
+low_cards <- mean_cards - sd(credit$Cards)
+med_cards <- mean_cards
+high_cards <- mean_cards + sd(credit$Cards)
+
+#instead of hardcoding numbers
+
+b0 <- model0$coefficients[1]
+b1 <- model0$coefficients[2]
+b2 <- model0$coefficients[3]
+b3 <- model0$coefficients[4]
+
+# three corresponding equations
+
+balance_low <- b0 + b1 * credit$Income + b2 * low_cards + b3 * credit$Income * low_cards
+balance_med <- b0 + b1 * credit$Income + b2 * med_cards + b3 * credit$Income * med_cards
+balance_high <- b0 + b1 * credit$Income + b2 * high_cards + b3 * credit$Income * high_cards
+
+plot(credit$Income, balance_low, type = "l", xlab = "Income", ylab = "Balance", ylim = c(0,1500), xlim = c(0,200))
+lines(credit$Income, balance_med, col = "red")
+lines(credit$Income, balance_high, col = "blue")
+legend(150, 300, legend = c("Low Cards", "Medium Cards", "High Cards"), col = c("black", "red", "blue"), lty = 1, cex = 0.6)
+
+```
+
+**Describe the relationship** 
+
+For income and balance, the relationship is positive and linear. So as Income increases, balance increases as well.
+
+As number of credit cards increase, the balance increases. So the balance is impacted by the credit cards
+
+**Context: lines are parellel**
+
+Angle of the slope doesn't change, so there is no interaction between number of credit cards and income.
+ - we can see that the relationship between income and balance is not depended on number of credit cards
+ 
+ We can see that the lines are parallel. This shows that the relationships between Balance and Income doesn't depend on Cards.
+ There is no significant interactions between income and cards.
+
+##$$ since there is no cross in the plot, there is not interaction
+
+
+It is important to remember that the interaction term is not significant, so we don't cannot interpret this plot.
+
+
+
+#### notes
+what we can see is:
+- relationship between income and balance
+- relationship between credit cards and balance
+- how does CC affect the relationship between income and balance (which it doesn't based on the plot)
+
+
+
+
+
+## Dummy Variables
+
+```{r}
+# Create Dummy Variables for Fragile and SemiFragile, with Durable as base
+cargo$XF <- ifelse(cargo$CARGO == "Fragile", 1, 0)
+cargo$XS <- ifelse(cargo$CARGO == "SemiFrag", 1, 0)
+cargo$XD <- ifelse(cargo$CARGO == "Durable", 1, 0)
+
+# prediciton for semifragile packages
+semifragcost <- predict(cargo.reg, newdata = data.frame(XF = 0, XS = 1))
+
+
+# will automatically choose base variable by first in order alphabetically; default base = first alphabetically
+
+str(cargo) # check the type of this variable
+
+cargo$CARGO <- as.factor(cargo$CARGO) # transformed string into factor with three levels (are grouped together)
+str(cargo)
+
+cargo.reg <- lm(COST ~ CARGO, data = cargo) # regression with the categorical variable
+
+#### Or ####
+
+# changes the base category of a factor within a data.frame
+cargo <- within(cargo, CARGO <- relevel(CARGO, ref = "Fragile")) # allows us to choose the base variable
+
+cargo.reg <- lm(COST ~ CARGO, data = cargo)
+summary(cargo.reg)
+
+yhat <- predict(cargo.reg, newdata=data.frame(CARGO = "SemiFrag"))
+
+
+
+# model with both quantitative and categorical factors
+express <- read.csv("EXPRESS_Type.csv", stringsAsFactors = TRUE) #if have strings, its considered a categorical variable -- turned into factors
+
+# Create complete second-order model
+
+expreg.complete <- lm(Cost ~ Weight + Distance + Weight:Distance + I(Weight^2) + I(Distance^2) + Type, data = express)
+
+expreg.complete <- lm(Cost ~ (Weight + Distance)^2 + I(Weight^2) + I(Distance^2) + Type, data = express)
+```
+
+## Interpretations for Dummy Variables
+
+Interpret slope: Keeping Income, rating, and Limit constant, compared to Group A, Group by has a higher balance by $8.
+
+**Interpret p-values**
+GroupB -- there is no significant difference between Group A and Group B
+GroupC -- there is a significant difference between Group A and Group C
+
+
+As long as you have one signfiicant dummy variable, then the whole categorical variable makes sense
+
+But a single p-value just determines if there is a significant difference between a category and the base
+
+
+
+
+
+############# Model Building and Variable Screening ##############
+
+## Sample data
+
+```{r}
+tam <- read.table("TAMSALES8.txt", header = TRUE, sep = "", stringsAsFactors = TRUE)
+head(tam)
+```
+
+
+## Remove unusued variables
+
+```{r}
+tam <- tam[, -c(1,3)] # removes 1st and 3rd columns
+```
+
+
+## Correlation plot
+
+```{r}
+install.packages("corrplot")
+
+library(corrplot) # refer the functions in this package
+M <- cor(tam[,c(1:4)])# get the correlation matrix first
+corrplot(M, method = "number") # plot the values with colors
+
+# method: number, circle, square, pie, shade
+```
+
+
+## Training set and validation set
+
+```{r}
+# if you don't set the seed, every time you run the code you will get different samples
+set.seed(101)
+
+# produces a subset of random row numbers, with proportions
+trainIndex <- sample(1:nrow(tam), size = round(0.7*nrow(tam)), replace = FALSE)
+head(trainIndex)
+
+# training sample with 70% of the observations
+tam.train <- tam[trainIndex, ]
+head(tam.train)
+
+# validation sample with all of the rest of the observations
+tam.valid <- tam[-trainIndex,]
+head(tam.valid)
+
+nrow(tam.train)
+nrow(tam.valid)
+nrow(tam) # should equal training set + valid set rows
+
+
+
+
+# OR
+
+## Next find the index of random numbers for the training sample rows
+RNGkind(sample.kind = "Rounding")
+
+## Produce a subset of random row numbers as index of rows
+set.seed(101)
+
+# produces a subset of random row numbers
+trainIndex <- sample(1:n, size = round(0.7*n), replace=FALSE)
+```
+
+### Create the model
+
+```{r}
+tam.reg.1 <- lm(SALES ~ LAND + IMP, data = tam.train)
+```
+
+
+## Validation R2 and MSE 
+
+```{r}
+predicted_y <- predict(tam.reg.1, newdata = tam.valid) # testing the validation set data in the regression with the training set
+observed_y <- tam.valid$SALES
+mean_y <- mean(tam.valid$SALES)
+
+R2valid <- 1 - sum((observed_y - predicted_y)^2)/sum((observed_y-mean_y)^2)
+R2valid
+
+MSEvalid <- sum((observed_y - predicted_y)^2)/nrow(tam.valid)
+MSEvalid
+
+anova(tam.reg.1)
+
+# compare R2 valid and MSE valid to the model's R2 and MSE to see if there is significant changes
+```
+
+
+
+## Coding strings as factors
+
+```{r}
+# Check the variables type
+str(data)
+
+# First method
+sal.data <- read.csv("Salaries.csv", stringasFactors = TRUE)
+
+
+# Check the levels of the variable (returns the different categories of the variable)
+levels(sal.data$rank) ## ** only works on factors (not chr)
+
+
+# Method 2
+sal.new$rank <- as.factor(sal.new$rank) # changes variable from chr to fctr (**Want them set as factors)
+sal.new$sex <- as.factor(sal.new$sex)
+
+
+# Manually set the factors
+flag$STATUS <- factor(flag$STATUS, levels = c(0,1), labels = c("competitive", "fixed"))
+flag$DISTRICT <- factor(flag$DISTRICT, levels = c(1,2,3,4,5), labels = c("Dist1", "Dist2", "Dist3", "Dist4", "Dist5"))
+flag$SUBCONT <- factor(flag$SUBCONT, levels = c(0,1), labels = c("no", "yes"))
+
+
+# factor() -> create or modify a factor with full control
+# as factor() -> quickly convert something into a factor (no customization) *** converts chr into factors -- can do level after that
+```
+
+
+
+## Multiple categorical variables
+
+# Conclusions for interaction terms
+
+Call:
+lm(formula = salary ~ (sex + rank)^2, data = sal.data)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-69321 -15370  -1395  12138 104424 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)             88513       7487  11.822  < 2e-16 ***
+sexMale                  6357       8151   0.780 0.435925    
+rankAsstProf           -10463      10345  -1.011 0.312452    
+rankProf                33455       9338   3.583 0.000383 ***
+sexMale:rankAsstProf    -3095      11288  -0.274 0.784056    
+sexMale:rankProf        -1204       9992  -0.120 0.904177    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 23680 on 391 degrees of freedom
+Multiple R-squared:  0.3967,	Adjusted R-squared:  0.389 
+F-statistic: 51.42 on 5 and 391 DF,  p-value: < 2.2e-16
+
+
+**Conclusions for each term **
+
+With the same rank, there is no significant difference in salary between male and female.
+
+With the same sex group, there is not a significant difference in salary between Assistant Professors and Associate Professors (base).
+
+With the same sex group, there is a significant different in salary between Professors and Associate Professors.
+
+Both interaction terms are not significant. Rank will not affect how does the salary change by sex groups. Sex groups will not affect how does the salary change by ranks. In other words, the relationship between salary and rank is the same, regardless of sex. The relationship between salary and sex is the same, regardless of rank.
+
+# Relevel function to change baseline category
+
+```{r}
+sal.data <- within(sal.data, rank <- relevel(rank, ref = "AsstProf"))
+reg.sal <- lm(salary~(sex + rank)^2, data = sal.data)
+```
+
+
+
+## Create an interaction term of two categorical variables
+
+```{r}
+# Make a dataframe of all the cases of the variables (cover all levels of both factors)
+sex <- c("Female", "Female", "Female", "Male", "Male", "Male")
+rank <- c("AsstProf", "AssocProf", "Prof", "AsstProf", "AssocProf", "Prof")
+sal.new <- data.frame (cbind(rank, sex))
+
+# use predict() funciton to get predicted values and join these to the data frame
+pred.sal <- predict(reg.sal, newdata = sal.new)
+sal.new$salary <- pred.sal
+
+
+# Plot the interaction plot
+
+plot(1:3, sal.new$salary[1:3], col = "blue", type = "b", xaxt = "n", xlab = "Rank", ylab = "Salary", main = "Interaction Plot for Rank and Sex", ylim = c(75000, 130000)) 
+# 1:3 represents x values, then next part represents y
+lines(1:3, sal.new$salary[4:6], col = "red", type = "b") # type = b means points are bubbles (default type is b as well)
+axis(1, at = 1:3, labels = levels(sal.new$rank))
+legend("topleft", legend=c("Female", "Male"), col = c("blue","red"), lty - 1, cex = 0.6)
+
+
+
+## OR do ggplot
+
+library(ggplot2) ## load the ggplot2 library, so that we can use the ggplot() function within the library
+# install in the console though so that it is downloaded universally, and then load it here: install.packages("ggplot2")
+
+ggplot(data=sal.new, aes(x=rank, y=salary, group = sex, color = sex)) + geom_point() + geom_line() + ggtitle("Interaction Plot for Rank and Sex")
+
+```
+
+
+
+## Create natural lof variable 
+
+```{r}
+flag$lnLOWBID <- log(flag$LOWBID)
+```
+
+
+
+
+###### Variable Screening ######
+
+
+## Variable screening process
+
+```{r}
+# first, install the packages of "leaps
+# install.packages("leaps")
+library(leaps) # can check this first to see if it exists before installing it
+
+
+# use the regsubsets(formula, data, nbest=, nvmax=) to get the best subset
+# Let's start with all possible variables/predictors
+
+f <- formula(Price ~ Mileage + Make + Type + Cylinder + Liter + Cruise + Sound + Leather) # store equation with all possible predictors
+
+# or
+
+# f <- formula (Price ~.)
+
+
+best.subset.cars <- regsubsets(f, cars, nbest = 1, nvmax = 15)
+# keep the best one of each size, max number of predictors: 3 quantitative, 5 categorical (includes 12 dummy variables) = 15
+
+### formula: input your model
+### nbest: number of models of each size to consider
+### nvmax: the largest number of terms you will consider in the model
+
+summary.best.cars <- summary(best.subset.cars) # we will use this summary a lot in the future, therefore we assign the summary to a variable
+## the summary shows as a matrix with 15 rows/# of variables in the model and all possible
+```
+
+
+## Items in subsets
+
+```{r}
+# tells you the names of the items stored in this object
+names(summary.best.cars)
+
+# prints which
+print(summary.best.cars$which) # instead of map with stars, this shows the results with True/False (more detailed model)
+
+print(summary.best.cars$rsq) # shows list of r squared of all the subsets
+
+print(summary.best.cars$rss) # shows list of residual sum of squares (SSE)
+
+print(summary.best.cars$adjr2) # shows list of adjusted r squared
+
+print(summary.best.cars$cp) # theoretical number of predictors for that model; cp close to the number of predictors, then good; 
+  # cp >> k (# predictors) = underfitting;  cp << k = overfitting
+
+print(summary.best.cars$bic) # list of BIC's -- smaller = better; best model = -2124 from the summary
+
+
+
+print(summary.best.cars$outmat) # outmat is short for output matrix -- shows the stars
+```
+
+
+## which.min() and which.max() functions
+
+```{r}
+# use which.min() to check the lowest BIC
+summary.best.cars.bic <- which.min(summary.best.cars$bic)
+summary.best.cars.bic  # end up with 12th model
+
+summary.best.cars$outmat[summary.best.cars.bic,]
+
+# also
+BIC(model)
+
+
+
+# use which.max() to check the highest adjusted r square
+best.subset.cars.adjr2 <- which.max(summary.best.cars$adjr2)
+# gives you the index of the model with the highest adjusted R square value
+
+best.subset.cars.adjr2 # end up with the 14th model
+summary.best.cars$outmat[best.subset.cars.adjr2,] # shows the output matrix at the index with the best adjr2
+
+print(summary.best.sal.full$adjr2[summary.best.sal.full.adjrsq]) # to print the best r-squared value
+```
+
+
+## Calculate AIC -- not provided in the summary
+
+```{r}
+k <- rowSums(summary.best.cars$which) - 1
+SSE <- summary.best.cars$rss
+n <- nrow(cars)
+AIC.best <- n*log(SSE/n) + 2*k
+AIC.best # gives dataframe of all possible AIC's
+
+AIC.min.best <- which.min(AIC.best)
+AIC.min.best  ## end up with the 13th model with lowest AIC
+summary.best.cars$outmat[AIC.min.best,]
+
+
+AIC(model)
+```
+
+
+## Plot of adjusted R squared by model size
+
+```{r}
+plot(summary.best.cars$adjr2, xlab = "Number of Variables", ylab = "Adjusted Rsq", type = "l") # lower case L
+## after 8th predictor, it starts to flatten out
+
+
+# this is the model we picked as best in terms of adjusted R-square
+points(best.subset.cars.adjr2, summary.best.cars$adjr[best.subset.cars.adjr2], col =)
+# adds a point on the index (14th) where the r-squared is the best
+```
+
+
+## Plot BIC and AIC
+
+```{r}
+plot(summary.best.cars$bic, xlab = "Number of Variables", ylab = "BIC", type = "l")
+points(summary.best.cars.bic, summary.best.cars$bic[summary.best.cars.bic], col = "red")
+
+
+plot(AIC.best, xlab = "Number of Variables", ylab = "AIC", type = "l")
+points(AIC.min.best, AIC.best[AIC.min.best], col = "red")
+
+
+## from the three plots, all of the three criteria show sharp drop at 8
+
+## --> compare model with 8 now too
+
+
+# since at least one of the Make dummy variables is in all of the models, you have to include all of the dummy variables of Make
+
+```
+
+
+
+## Forward, backward, and stepwise selections
+
+```{r}
+## step 1: create 'null' model
+
+null <- lm(Price ~ 1, data = cars)
+
+
+
+## step 2: create 'full' model
+
+full <- lm(Price ~ Mileage + Make + Type + Cylinder + Liter + Cruise + Sound + Leather, data = cars)
+
+# or
+
+# full <- lm(Price ~ ., data = cars)
+
+
+
+## step 3: put them into 'step()' function, the process will automatically stop if there is no more significant improvement
+
+# step(object, scope, direction = c("both", "backward", "forward"), trace = 1, k = 2 or k = log(n))
+
+# object = starting model
+  # if forward selection, start with empty model 'null', and direction = "forward"
+  # if backward selection , start with full model 'full', and 'direction = "backward"'
+# scope = range of model; smallest and biggest model to be considered
+# k = 2 chooses based on the AIC and k = log(n) chooses based on the BIC. Based on the formula
+# trace = 0 to show only the final selected model; trace = 1 to show detailed steps, and trace = 2 shows full summaries
+
+
+## Forward selection
+
+forward.reg <- step(null, scope = list(lower = null, upper = full), direction = "forward", trace = 1, k = 2)
+
+
+## backward selection
+
+backward.reg <- step(full, scope = list(lower = null, upper = full), direction = "backward", trace = 1, k = 2)
+
+
+## stepwise selection
+
+step.reg <- step(null, scope = list(lower = null, upper = full), direction = "both", trace = 1, k = 2)
+
+names(step.reg)
+```
+
+
+
