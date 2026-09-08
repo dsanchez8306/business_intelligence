@@ -1,0 +1,69 @@
+---
+title: "Assignment 4"
+author: "Dominic Sanchez"
+date: "2026-09-08"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_download: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1: # of Listings
+
+## Read the data
+
+```{r read_data}
+con = DBI::dbConnect(RSQLite::SQLite(), "../data/midwest_airbnb.db")
+listings = DBI::dbReadTable(con, "listings")
+
+head(listings)
+```
+
+## Determine the number of listings
+
+```{r num_listings}
+nrow(listings)
+```
+
+# Question 2: Number of listings in Columbus
+
+```{r}
+listings[,[1 = "Columbus"]]
+```
+
+
+# Question 3: Most expensive listing in Chicago
+
+```{r exp_chicago}
+
+```
+
+
+# Question 4: Distinct neighborhood columns among Chicago listings
+
+```{r dist_neigh_chic}
+
+```
+
+
+# Question 5: Superhost listings
+
+```{r superhost_listings}
+
+```
+
+
+# Question 6: Listings > $1,000 per night
+
+```{r listing_1000}
+
+```
+
+
