@@ -24,6 +24,8 @@ con = DBI::dbConnect(RSQLite::SQLite(), "../data/midwest_airbnb.db")
 listings = DBI::dbReadTable(con, "listings")
 
 head(listings)
+
+typeof(listings)
 ```
 
 ## Determine the number of listings
@@ -35,35 +37,51 @@ nrow(listings)
 # Question 2: Number of listings in Columbus
 
 ```{r}
-listings[,[1 = "Columbus"]]
+table(listings$city)
+```
+
+```{r}
+sum(listings$city == "Columbus")
 ```
 
 
 # Question 3: Most expensive listing in Chicago
 
 ```{r exp_chicago}
+filter(listings, listings$city == "Chicago")
 
+listings$name[listings$city == "Chicago" & 
+             listings$price == max(listings$price[listings$city == "Chicago"])]
+
+listings |>
+  subset(city == "Chicago") |>
+  subset(price == max(price))
+```
+
+```{r}
+chicago <- subset(listings, city == "Chicago")
+chicago[chicago$price == max(chicago$price),]
 ```
 
 
 # Question 4: Distinct neighborhood columns among Chicago listings
 
 ```{r dist_neigh_chic}
-
+length(unique(chicago$neighbourhood))
 ```
 
 
 # Question 5: Superhost listings
 
 ```{r superhost_listings}
-
+sum(listings$host_is_superhost == "t", na.rm = TRUE)
 ```
 
 
 # Question 6: Listings > $1,000 per night
 
 ```{r listing_1000}
-
+sum(listings$price > 1000)
 ```
 
 
