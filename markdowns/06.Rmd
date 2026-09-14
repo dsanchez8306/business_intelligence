@@ -1,0 +1,65 @@
+---
+title: "Class 06"
+author: "Dominic Sanchez"
+date: "2026-09-14"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    number_sections: TRUE
+    code_download: TRUE
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r hw04}
+con = DBI::dbConnect(RSQLite::SQLite(), "../data/midwest_airbnb.db")
+listings = DBI::dbReadTable(con, "listings")
+```
+
+```{r kahoot}
+run = readr::read_csv(
+  "https://isa401-find-your-seat.vercel.app/api/export?section=A&run=13")
+dplyr::glimpse(run)
+```
+
+
+```{r db_connection}
+con = DBI::dbConnect(RSQLite::SQLite(),
+                     "../data/scout.db")
+DBI::dbListTables(con)
+postings = DBI::dbReadTable(con, "scout_postings")
+DBI::dbDisconnect(con)
+dplyr::glimpse(postings[, c("title", "company",
+  "location_state", "remote", "skills_json")])
+```
+
+
+```{r JSON_inside_cell}
+first_cell = postings$skills_json[1]
+cat(strtrim(first_cell, 60))   # base R: first 60 characters
+
+skills = jsonlite::fromJSON(first_cell)
+skills
+```
+
+
+```{r sql}
+con = DBI::dbConnect(RSQLite::SQLite(),
+                     "../data/scout.db")
+top_remote = DBI::dbGetQuery(con, "
+  SELECT company, COUNT(*) AS n
+  FROM scout_postings
+  WHERE remote = 1
+  GROUP BY company
+  ORDER BY n DESC
+  LIMIT 10")
+DBI::dbDisconnect(con)
+top_remote
+```
+
+
+

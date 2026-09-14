@@ -1,1 +1,3 @@
 /.Rproj.user
+.Renviron
+apps/job_scout_chat/apikey.txt
