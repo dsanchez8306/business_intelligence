@@ -1,3 +1,5 @@
 /.Rproj.user
 .Renviron
 apps/job_scout_chat/apikey.txt
+apps/job_scout_chat/data/api_key.txt
+/.shinychat/conversations

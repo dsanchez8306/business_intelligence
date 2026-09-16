@@ -1,3 +1,5 @@
+# install.packages("querychat", dependencies = T)
+
 # apps/job_scout_chat/app.R
 library(querychat)
 

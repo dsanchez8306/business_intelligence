@@ -1,0 +1,97 @@
+---
+title: "Class 07 - dplyr"
+author: "Dominic Sanchez"
+date: "2026-09-16"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    number_sections: TRUE
+    code_download: TRUE
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup}
+con = DBI::dbConnect(RSQLite::SQLite(), "../data/scout.db")
+postings = DBI::dbReadTable(con, "scout_postings") |> tibble::as_tibble()
+DBI::dbDisconnect(con)
+```
+
+```{r sql_dplyr}
+# Today: dplyr, on the data frame from dbReadTable()
+postings |> # pipe = then ; take postings, then
+  dplyr::filter(remote == 1) |> # filter by remote jobs, then
+  dplyr::count(company, sort = TRUE) |> # count by company
+  head(10) 
+```
+
+```{r}
+# can do variable = jobs |>  and set the variable to the output of the query
+jobs = postings |>
+  dplyr::select(company, title, location_state, remote, category, posted_at, last_seen_at)
+jobs
+
+jobs |>
+  dplyr::select(company, location_state, remote, posted_at, last_seen_at) |>
+  dplyr::filter(remote == 1) |>
+  dplyr::mutate(days_open = as.numeric(as.Date(last_seen_at) - as.Date(posted_at))) |> # mutate creates new column, which this creates a column that says how many days the posting has been open for
+  dplyr::arrange(dplyr::desc(days_open)) |>
+  dplyr::group_by(company) |>
+  dplyr::summarize(n = dplyr::n(), avg_days = mean(days_open))
+```
+
+
+
+# Answering the question about data types
+
+```{r}
+jobs = postings |>
+  dplyr::select(company, location_state, remote, posted_at, last_seen_at) |>
+  dplyr::filter(remote == 1) |>
+  dplyr::mutate(
+    posted_at = as.Date(posted_at), # force change the column into date format
+    last_seen_at = as.Date(last_seen_at),
+    days_open = as.numeric(last_seen_at - posted_at)
+    ) |> 
+  dplyr::arrange(dplyr::desc(days_open)) |> 
+  dplyr::group_by(company) |>
+  dplyr::summarize(n = dplyr::n(), avg_days = mean(days_open))
+```
+
+```{r helpers}
+jobs = jobs |> dplyr::mutate(dplyr::across(dplyr::ends_with("_at"), as.Date))    # both dates at once
+jobs |> dplyr::summarize(dplyr::across(dplyr::where(is.numeric), mean))
+```
+
+
+## Demo
+
+```{r}
+con = DBI::dbConnect(RSQLite::SQLite(), "../data/scout.db")
+postings = DBI::dbReadTable(con, "scout_postings") |> tibble::as_tibble()
+DBI::dbDisconnect(con)
+
+jobs = postings |>
+  dplyr::select(company, title, location_state, remote, category, posted_at, last_seen_at) |>
+  dplyr::mutate(dplyr::across(dplyr::ends_with("_at"), as.Date),
+                days_open = as.numeric(last_seen_at - posted_at))
+```
+
+```{r q1_by_category}
+# which category is remote friendly
+# to answer that, the logic would be as follows:
+# - find number of jobs per category
+# - normalize the number of remote jobs per category by dividing by the total jobs
+
+jobs |> 
+  # I want to move from unit of analysis being a job posting to a category
+  dplyr::group_by(category) |> 
+  dplyr::summarise(
+    postings= dplyr::n(),
+    remote_share = mean(remote)
+  ) 
+```

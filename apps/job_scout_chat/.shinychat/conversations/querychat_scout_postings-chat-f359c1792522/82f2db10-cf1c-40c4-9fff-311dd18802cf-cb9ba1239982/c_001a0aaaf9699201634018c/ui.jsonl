@@ -1,0 +1,2 @@
+{"node_id":"n_0001","data":[{"version":1,"role":"user","segments":[{"content":"Hi","content_type":"markdown"}]}]}
+{"node_id":"n_0002","data":[{"version":1,"role":"assistant","segments":[{"content":"Hi! I can help you explore and filter the postings data.\n\n<ul>\n<li><span class=\"suggestion\">How many postings are there?<\/span><\/li>\n<li><span class=\"suggestion\">Show me the latest postings<\/span><\/li>\n<li><span class=\"suggestion\">What locations have the most postings?<\/span><\/li>\n<\/ul>","content_type":"markdown"}]}]}
