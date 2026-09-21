@@ -1,0 +1,90 @@
+---
+title: "Airbnb Analysis"
+author: "Dominic Sanchez"
+date: "2026-09-19"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_download: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Setup
+
+```{r setup}
+con = DBI::dbConnect(RSQLite::SQLite(), "../data/midwest_airbnb_extended.db")
+listings     = DBI::dbReadTable(con, "listings") |> tibble::as_tibble()
+availability = DBI::dbReadTable(con, "availability_monthly") |> tibble::as_tibble()
+reviews      = DBI::dbReadTable(con, "reviews_monthly") |> tibble::as_tibble()
+DBI::dbDisconnect(con)
+```
+
+
+
+## Task 1: Who owns the market
+
+```{r task_1}
+host_listings <- listings |> 
+  dplyr::select(host_id, city) |> 
+  dplyr::group_by(host_id) |> 
+  dplyr::summarize(
+    A1 = dplyr::n(),
+    A2 = sum(city == "Chicago")
+  dplyr::filter(A1 >= 10)
+  )
+
+host_listings
+```
+
+## Task 2: Value for a family of four
+
+```{r task_2}
+
+```
+
+## Task 3: What earns
+
+```{r task_3}
+
+```
+
+## Task 4: Concentration
+
+```{r task_4}
+
+```
+
+## Task 5: The year ahead
+
+```{r task_5}
+
+```
+
+
+## Task 6: Demand by season
+
+```{r task_6}
+
+```
+
+## Task 7: Superhost Premium
+
+```{r task_7}
+
+```
+
+## Task 8: No rows in availability
+
+```{r task_8}
+
+```
+
+
+
