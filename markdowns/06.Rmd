@@ -37,6 +37,7 @@ dplyr::glimpse(postings[, c("title", "company",
   "location_state", "remote", "skills_json")])
 ```
 
+## usethis::edit_r_environ()
 
 ```{r JSON_inside_cell}
 first_cell = postings$skills_json[1]
