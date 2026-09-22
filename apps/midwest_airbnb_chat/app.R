@@ -17,4 +17,18 @@ qc = querychat::querychat(
   extra_instructions = "data/extra_instructions.md"
 )
 
+ui = page_sidebar(
+  title = "Airbnb Query Chat",
+  theme = bs_theme(primary = "#4169E1",
+                   base_font = font_google("Lato")),
+  sidebar = qc$sidebar(width = 350),
+  card(card_header(textOutput("title")),
+       DT::DTOutput("table")),
+  accordion(open = FALSE,
+            accordion_panel("SQL", verbatimTextOutput("sql")),
+            accordion_panel("About", 
+                            "The listings come from Inside Airbnb and include Chicago (2026-07-20), Columbus (2026-07-23), and the Twin Cities (2026-07-21); built by Dominic Sanchez"))
+  
+)
+
 qc$app_obj()
