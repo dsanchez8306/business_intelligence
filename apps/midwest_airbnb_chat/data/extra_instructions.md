@@ -3,9 +3,9 @@
 Rules the LLM follows when it writes SQL for `listings`.
 
 - `price` is the nightly price in U.S. dollars. When the user asks what something costs, use `price` and round money to whole dollars in the answer.
+- `host_is_superhost` and `instant_bookable` both take text values 't' and 'f', and are not recognized as boolean values
+- when the user inputs a city, match the city name to the `city` column
+- when the user asks for data within a specific city, filter the listings with the `city` column
+- when searching a `name`, treat uppercase and lowercase letters the same, assume there is no difference between in values
+- when calculating an average rating for a listing, ignore null values in the `review_scores_rating` column
 
-<!-- Add more rules below (Assignment 05 asks for at least three). Good candidates:
-     `host_is_superhost` and `instant_bookable` are the text values 't' and 'f',
-     not booleans; how to match a city name the user types; how to search `name`
-     case-insensitively; and whether to ignore rows whose `review_scores_rating`
-     is NULL when averaging ratings. -->
