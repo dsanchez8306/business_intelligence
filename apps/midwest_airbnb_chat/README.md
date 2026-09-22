@@ -14,8 +14,16 @@ The app connects to a SQLite database (`data/scout.db`), hands the `scout_postin
 
 **Example queries:**
 - "How many Airbnb listings are in Chicago?"
+
+![Query 1 result](images/query1.png)
+
 - "What is the average price of listings in Columbus?"
+
+![Query 2 result](images/query2.png)
+
 - "How many listings are there for each room type in the Twin Cities?"
+
+![Query 3 result](images/query3.png)
 
 ---
 
