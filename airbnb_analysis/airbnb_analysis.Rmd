@@ -32,58 +32,183 @@ DBI::dbDisconnect(con)
 
 ```{r task_1}
 host_listings <- listings |> 
-  dplyr::select(host_id, city) |> 
-  dplyr::group_by(host_id) |> 
-  dplyr::summarize(
-    A1 = dplyr::n(),
-    A2 = sum(city == "Chicago")
-  dplyr::filter(A1 >= 10)
-  )
+  dplyr::count(host_id, city)
 
 host_listings
+
+
+# A1
+a1_listings <- host_listings |> 
+  dplyr::filter(n >= 10) |> # confirming the bottom numbers are >= 10
+  dplyr::arrange(n)
+
+a1_listings # 200
+
+
+# A2
+a2 <- a1_listings |> 
+  dplyr::filter(city == "Chicago") |> 
+  dplyr::summarise(percent = dplyr::n() / sum(host_listings$city == "Chicago") * 100)
+
+a2 # 3.39
+  
+
 ```
 
 ## Task 2: Value for a family of four
 
 ```{r task_2}
+family <- listings |> 
+  dplyr::filter(room_type == "Entire home/apt", accommodates >= 4, number_of_reviews >= 10, review_scores_rating >= 4.8) |> 
+  dplyr::mutate(price_per_person = price / accommodates) 
 
+family
+
+
+family <- family |> 
+  dplyr::group_by(city, neighbourhood) |> 
+  dplyr::summarise(median_price = median(price_per_person), n = dplyr::n()) |> 
+  dplyr::filter(n >= 20) |> 
+  dplyr::arrange(median_price)
+
+family # North Linden
 ```
 
 ## Task 3: What earns
 
 ```{r task_3}
+earn <- listings |> 
+  dplyr::group_by(city, room_type) |> 
+  dplyr::summarise(
+    dplyr::across(
+      c(price, reviews_per_month, estimated_revenue_l365d),
+      median,
+      na.rm = TRUE
+    )
+  )
 
+earn # 19619
 ```
 
-## Task 4: Concentration
+## Task 4: Concentration ***** 
 
 ```{r task_4}
+concentration <- listings |> 
+  dplyr::group_by(city) |> 
+  dplyr::arrange(dplyr::desc(estimated_revenue_l365d)) |> 
+  dplyr::mutate(cutoff = ceiling(0.10 * dplyr::n())) 
 
+concentration
 ```
 
-## Task 5: The year ahead
+## Task 5: The year ahead ******
 
 ```{r task_5}
+year <- availability |> 
+  dplyr::filter(month == "2026-10") |> 
+  dplyr::left_join(
+    listings |>  dplyr::filter(room_type == "Entire home/apt"),
+    by = "id"
+  )
 
+year
+
+mostly_taken <- year |> 
+  dplyr::filter(nights_available < 0.5 * nights_in_month)
+
+mostly_taken
+
+# to count the total amount of mostly taken homes by city
+total <- year |> 
+  
+  
+  ## Question: when asked to report the city with the lowest share of mostly-taken entire homes:
+  ## are we calculating the percentage with the total being all home s in the city, or the total being all
+  ## mostly-taken entire homes in the city, and the shares of all 3 cities should add up to 100%
 ```
 
 
 ## Task 6: Demand by season
 
 ```{r task_6}
+demand <- reviews |>
+  dplyr::left_join(listings, by = "id") |> 
+  dplyr::filter(month >= "2025-07" & month <= "2026-06") |> 
+  dplyr::group_by(city, month) |> 
+  dplyr::summarise(total_reviews = sum(reviews))
 
+demand
+
+a8 <- demand |> 
+  dplyr::filter(city == "Twin Cities") |> 
+  dplyr::arrange(dplyr::desc(total_reviews))
+
+a8 # 2025-08
+
+a9 <- a8 |> 
+    dplyr::summarise(ratio = max(total_reviews) / min(total_reviews))
+
+a9 # 2.372235
 ```
 
 ## Task 7: Superhost Premium
 
 ```{r task_7}
+premium <- listings |>
+  dplyr::filter(
+    room_type == "Entire home/apt",
+    !is.na(host_is_superhost)
+  ) |> 
+  dplyr::group_by(city, host_is_superhost) |> 
+  dplyr::summarise(
+    median_price = median(price, na.rm = TRUE),
+    median_rating = median(review_scores_rating, na.rm = TRUE)
+  )
 
+premium
+
+superhosts <- premium |> 
+  dplyr::filter(host_is_superhost == "t")
+
+others <- premium |> 
+  dplyr::filter(host_is_superhost == "f")
+
+superhosts
+others
+
+premium_calc <- superhosts |> 
+  dplyr::left_join(
+    others,
+    by = "city",
+    suffix= c("_superhosts", "_others") # creates suffixes to separate the medians, otherwise it would just be .x and .y
+  ) |> 
+  dplyr::mutate(
+    premium =  median_price_superhosts - median_price_others
+  ) |> 
+  dplyr::select(city, premium)
+
+premium_calc # allows us to easily see the premiums across all three cities for part B questions
 ```
 
 ## Task 8: No rows in availability
 
 ```{r task_8}
+missing_availability <- listings |> 
+  dplyr::anti_join(availability, by = "id")
 
+missing_availability
+
+a10 <- missing_availability |> 
+  dplyr::summarise(n = dplyr::n())
+
+a10 # 456
+
+city_most_loses <- missing_availability |> 
+  dplyr::group_by(city) |> 
+  dplyr::summarise(n = dplyr::n()) |> 
+  dplyr::arrange(dplyr::desc(n))
+
+city_most_loses # Columbus
 ```
 
 
