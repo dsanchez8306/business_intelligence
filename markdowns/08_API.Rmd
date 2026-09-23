@@ -21,9 +21,110 @@ knitr::opts_chunk$set(echo = TRUE)
 httr2::request("https://data.cincinnati-oh.gov/resource/rvmt-pkmq.json") |>
   httr2::req_url_query("$limit" = 5) |>
   httr2::req_perform() |>
-  httr2::resp_body_string() |>
+  httr2::resp_body_string() |>  # gets you a response text body in form of json
   jsonlite::fromJSON() -> cincy_crashes # save into variable
 ```
+
+
+
+## Fred API Example
+
+```{r fred}
+httr2::request("https://api.stlouisfed.org/fred/series/observations") |>
+  httr2::req_url_query(
+    series_id = "IHLIDXUSOH",
+    api_key = Sys.getenv("FRED_API_KEY"),
+    file_type = "json"
+  ) |> # will return a url with the API key and other requests
+  # nothing has been sent yet
+  httr2::req_perform() |>
+  httr2::resp_body_string() |>
+  jsonlite::fromJSON() -> ohio_jobs # list of 13 items, data is under the item "observations"
+
+
+
+jobs_df <- ohio_jobs[[13]] # filter down to observations which is the last item in the list
+# can do dplyr::glimpse(ohio_jobs) to view list values
+# can do names(ohio_jobs) to get a list with indexes of the names
+
+
+# to get data from Sept 1, 2026
+
+# (a) to get all the data and then filter the rows that I want
+## not the most efficient but correct
+dplyr::glimpse(jobs_df)
+jobs_df |> 
+  dplyr::mutate( # need to set the date as a date; date was a character, overwrote it into a data column
+    date = lubridate::ymd(date)  # must have tidyverse for this function
+  ) |>
+  dplyr::filter(date >= '2026-09-01') -> jobs_df_mod
+
+# (b) use the API since it had observation_start
+httr2::request("https://api.stlouisfed.org/fred/series/observations") |>
+  httr2::req_url_query(
+    series_id = "IHLIDXUSOH",
+    api_key = Sys.getenv("FRED_API_KEY"),
+    file_type = "json",
+    observation_start = "2026-09-01" # filter to start at september 9, 2026
+  ) |> # will return a url with the API key and other requests
+  # nothing has been sent yet
+  httr2::req_perform() |>
+  httr2::resp_body_string() |>
+  jsonlite::fromJSON() -> ohio_jobs_sep_2026 # list of 13 variables
+
+ohio_jobs_sep_2026_df = ohio_jobs_sep_2026$observations
+
+```
+
+
+
+## USA Jobs API
+
+```{r usajobs}
+httr2::request("https://data.usajobs.gov/api/search") |>
+  httr2::req_url_query(Keyword = "Data Analyst", ResultsPerPage = 500) |>
+  httr2::req_headers(
+    Host = "data.usajobs.gov",
+    "User-Agent" = "sanchedr@miamioh.edu",
+    "Authorization-Key" = Sys.getenv("USAJOBS_API_KEY") # this site wants us to pass the API key as a header
+  ) |>
+  httr2::req_perform() |>
+  httr2::resp_body_string() |>
+  jsonlite::fromJSON(flatten = TRUE) -> usa_jobs_list
+
+# 401 error
+
+usa_df <- usa_jobs_list$SearchResult$SearchResultItems
+
+jobs_small = usa_df |>
+  dplyr::select(
+    title = MatchedObjectDescriptor.PositionTitle,
+    department = MatchedObjectDescriptor.DepartmentName,
+    agency = MatchedObjectDescriptor.OrganizationName,
+    location = MatchedObjectDescriptor.PositionLocationDisplay,
+    closes = MatchedObjectDescriptor.ApplicationCloseDate
+  )
+
+```
+
+```{r usajobs_questions}
+## answer based on query
+nrow(jobs_small)
+# returns a named vector)
+table(jobs_small$department) |>  sort(decreasing = T) |>  head(3)
+# returns a df
+jobs_small |>  dplyr::count(department) |>  dplyr::arrange(dplyr::desc(n)) |>  head(3)
+
+
+index_data_analyst = jobs_small$title |> 
+  stringr::str_detect(pattern = 'Data Analyst|Data Analytics')
+
+jobs = jobs_small[index_data_analyst, ]
+table(jobs$department)
+
+```
+
+
 
 
 
