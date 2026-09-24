@@ -13,15 +13,15 @@ A twelve-line [querychat](https://github.com/posit-dev/querychat) app built in I
 The app connects to a SQLite database (`data/scout.db`), hands the `scout_postings` table to querychat, and lets an LLM translate your question into SQL. Every answer shows the query it ran, so you can check the logic and reuse the SQL yourself.
 
 **Example queries:**
-- "How many Airbnb listings are in Chicago?"
+##### Query 1: "How many Airbnb listings are in Chicago?"
 
 ![Query 1 result](images/query1.png)
 
-- "What is the average price of listings in Columbus?"
+##### Query 2: "What is the average price of listings in Columbus?"
 
 ![Query 2 result](images/query2.png)
 
-- "How many listings are there for each room type in the Twin Cities?"
+##### Query 3: "How many listings are there for each room type in the Twin Cities?"
 
 ![Query 3 result](images/query3.png)
 
