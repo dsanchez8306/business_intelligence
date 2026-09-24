@@ -38,8 +38,14 @@ server = function(input, output, session) {
   output$title = renderText(vals$title() %||% "All listings")
   output$table = DT::renderDT(vals$df(),
                               options = list(pageLength = 10))
-  output$sql   = renderText(vals$sql() %||%
-                              "SELECT * FROM listings")
+  output$sql   = renderText(
+    paste(
+      "The SQL query above is generated based on your question and retrieves information from the listings table.",
+      "The default query below returns all of the information pertaining to the listings table and displays it above if no question has been provided.",
+      vals$sql() %||% "SELECT * FROM listings", # %||% means use the code on the left if it exists, otherwise, use the thing on the right
+      sep = "\n"
+    )
+  )
 }
 
 shinyApp(ui, server)

@@ -96,8 +96,7 @@ earn # 19619
 concentration <- listings |> 
   dplyr::group_by(city) |> 
   dplyr::arrange(dplyr::desc(estimated_revenue_l365d)) |> 
-  dplyr::mutate(cutoff = ceiling(0.10 * dplyr::n())) 
-
+  dplyr::mutate(cutoff = ceiling(0.10 * dplyr::n())) |> unique()|> dplyr::arrange(dplyr::desc(cutoff))
 concentration
 ```
 
