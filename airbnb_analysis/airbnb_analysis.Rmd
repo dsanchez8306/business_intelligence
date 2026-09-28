@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Setup
 
-```{r setup}
+```{r setup_db}
 con = DBI::dbConnect(RSQLite::SQLite(), "../data/midwest_airbnb_extended.db")
 listings     = DBI::dbReadTable(con, "listings") |> tibble::as_tibble()
 availability = DBI::dbReadTable(con, "availability_monthly") |> tibble::as_tibble()
