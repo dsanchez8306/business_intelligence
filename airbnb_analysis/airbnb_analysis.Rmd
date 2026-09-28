@@ -53,6 +53,16 @@ a2 <- a1_listings |>
 a2 # 3.39
   
 
+
+# b2 code
+b2 <- a1_listings |> 
+  dplyr::group_by(city) |> 
+  dplyr::summarise(
+    percent = dplyr::n() / sum(host_listings$city == city) * 100
+  ) |> 
+  dplyr::arrange(percent)
+
+b2
 ```
 
 ## Task 2: Value for a family of four
@@ -90,40 +100,93 @@ earn <- listings |>
 earn # 19619
 ```
 
-## Task 4: Concentration ***** 
+## Task 4: Concentration
 
 ```{r task_4}
 concentration <- listings |> 
   dplyr::group_by(city) |> 
   dplyr::arrange(dplyr::desc(estimated_revenue_l365d)) |> 
-  dplyr::mutate(cutoff = ceiling(0.10 * dplyr::n())) |> unique()|> dplyr::arrange(dplyr::desc(cutoff))
+  dplyr::mutate(
+    cutoff = ceiling(0.10 * dplyr::n()),
+    top_10 = dplyr::row_number() <= cutoff # creates row of true or false if the estimated revenue falls within the top_10 cutoff
+  )
+
 concentration
+
+columbus_revenue <- concentration |> 
+  dplyr::filter(city == "Columbus") |> 
+  dplyr::summarise(
+    top_10_revenue = sum(estimated_revenue_l365d[top_10]), # gives the sum of only the rows where top_10 is true
+    total_revenue = sum(estimated_revenue_l365d)
+  ) |> 
+  dplyr::mutate(
+    percent = 100 * top_10_revenue / total_revenue
+  )
+
+columbus_revenue # 36.08%
+
+
+# code for b2
+b2_rev <- concentration |> 
+  dplyr::group_by(city) |> 
+  dplyr::summarise(
+    top_10_revenue = sum(estimated_revenue_l365d[top_10]), # gives the sum of only the rows where top_10 is true
+    total_revenue = sum(estimated_revenue_l365d)
+  ) |> 
+  dplyr::mutate(
+    percent = 100 * top_10_revenue / total_revenue
+  )
+
+b2_rev 
 ```
 
-## Task 5: The year ahead ******
+## Task 5: The year ahead 
 
 ```{r task_5}
 year <- availability |> 
   dplyr::filter(month == "2026-10") |> 
   dplyr::left_join(
-    listings |>  dplyr::filter(room_type == "Entire home/apt"),
+    listings |> dplyr::filter(room_type == "Entire home/apt"),
     by = "id"
   )
 
 year
 
 mostly_taken <- year |> 
-  dplyr::filter(nights_available < 0.5 * nights_in_month)
+  dplyr::filter(
+    nights_available < 0.5 * nights_in_month
+  )
 
 mostly_taken
 
-# to count the total amount of mostly taken homes by city
+# count total number of entire homes in each city
 total <- year |> 
+  dplyr::group_by(city) |> 
+  dplyr::summarise(
+    total_homes = dplyr::n()
+  )
+
+total
+
+# count mostly-taken entire homes in each city
+taken <- mostly_taken |> 
+  dplyr::group_by(city) |> 
+  dplyr::summarise(
+    mostly_taken = dplyr::n()
+  )
+
+taken
+
+# calculate share of mostly taken homes in each city
+shares <- total |> 
+  dplyr::left_join(taken, by = "city") |> 
+  dplyr::mutate(
+    share = 100 * mostly_taken / total_homes
+  ) |> 
+  dplyr::arrange(share)
+
+shares # Columbus - 19.03%
   
-  
-  ## Question: when asked to report the city with the lowest share of mostly-taken entire homes:
-  ## are we calculating the percentage with the total being all home s in the city, or the total being all
-  ## mostly-taken entire homes in the city, and the shares of all 3 cities should add up to 100%
 ```
 
 
@@ -209,6 +272,3 @@ city_most_loses <- missing_availability |>
 
 city_most_loses # Columbus
 ```
-
-
-
