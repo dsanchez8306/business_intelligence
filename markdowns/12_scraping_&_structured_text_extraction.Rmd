@@ -1,0 +1,116 @@
+---
+title: 'Class 12: Web Scraping + Structured Text Extraction'
+author: "Dominic Sanchez"
+date: "2026-10-05"
+output: 
+  html_document:
+      toc: true
+      toc_float: true
+      number_sections: true
+      code_download: true
+      code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Continuing with the Plane Crash Info Example
+
+```{r plane_crashes, results='hold'} 
+# results = 'hold' holds all of the results from the code below until after all of the code
+year = 2025
+
+crash_url = paste0('https://www.planecrashinfo.com/', year, '/', year, '.htm')
+
+crash_page <- rvest::read_html(crash_url, encoding = "ISO-8859-1")
+
+# This should now print without the error
+crash_page
+
+# How many <table> elements are on the page?
+crash_tables <- crash_page |>
+  rvest::html_elements("table") |>
+  rvest::html_table()
+
+
+# From a cleaning perspective:
+# [1] translate this into a DF instead of a list
+# [2] replace the current headers with row 1 and then delete row 1
+# [3] convert date into a date column instead of character
+# [4] more complex cleaning to split multiple information within a cell into a separate column (outside the scope of today's class)
+
+#back to our pepper shaker analogy (no named list within the list)
+crash_df = crash_tables[[1]] # subsetting a list
+
+colnames(crash_df) = crash_df[1,]
+colnames(crash_df)
+
+crash_df = crash_df[-1,]
+
+# convert date column into date type obj
+crash_df = crash_df |> dplyr::mutate(Date = lubridate::dmy(Date))
+
+dplyr::glimpse(crash_df)
+```
+
+
+
+# In class game
+
+```{r stage_1}
+page = rvest::read_html("https://isa401-salvage.vercel.app/registry?start=1")
+classes = page |>
+  rvest::html_elements(".Dreadnought") |> # use inspect to find the selector
+  rvest::html_text2()
+length(classes)   # check this first: one per card
+```
+
+```{r stage_3}
+#for (x in 1:351:50)
+  #url = pasteo("https://isa401-salvage.vercel.app/registry?start=" + x)
+  #page = rvest::read_html("https://isa401-salvage.vercel.app/registry?start=1")
+
+base = "https://isa401-salvage.vercel.app"
+starts = seq(from = 1, to = 351, by = 50)
+pages = vector("list", length(starts)) # initializing the list 
+for (i in seq_along(starts)) { # returns the indeces in the seq [1,2,3,4,5,6,7,8], not the values [1,51,...]
+  pg = rvest::read_html(paste0(base, "/registry?start=", starts[i]))
+  pages[[i]] = data.frame(
+    class = pg |>  rvest::html_elements("div > ul > li:nth-child(1) > span") |> # nth-child(1) refers to only the class column, estimated salvage would be child(3)
+      # can get that information by inspecting the class and copying the selector, ignoring the #w111
+      rvest::html_text2(),
+    value = pg |> rvest::html_elements("div > ul > li:nth-child(3) > span") |>  # the selector is similar to a path that we follow to find the data we want, and child(3) and everything before is a path leading to the est. salavage values
+      rvest::html_text2() |> readr::parse_number()
+  )
+  Sys.sleep(1)   # robots.txt asks for it
+}
+registry = dplyr::bind_rows(pages)   # 400 rows?
+
+dreadnought_df = registry |> 
+  dplyr::filter(class == "Dreadnought")
+
+sum(dreadnought_df$value)
+```
+
+
+```{r structured_data}
+type_course = ellmer::type_object(
+  code = ellmer::type_string(
+    "Subject and number. For example, ISA 401"
+  ),
+  name = ellmer::type_string(
+    "Name of the course, without the code"
+  ),
+  credit_hours = ellmer::type_integer(
+    "The number in parentheses after the name",
+    required = FALSE
+  ),
+  prereqs = ellmer::type_string(
+    "The prerequisite[s] for this course",
+    required = FALSE
+  )
+)
+```
+
