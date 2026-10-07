@@ -1,0 +1,50 @@
+---
+title: "Class 13 Tidyverse"
+author: "Dominic Sanchez"
+date: "2026-10-07"
+output:
+  html_document:
+      toc: true
+      toc_float: true
+      number_sections: true
+      code_download: true
+      code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+planecrashinfo.com/2025/2025.htm
+
+```{r tidy_tc_crashes}
+year = 2025
+
+crash_url = paste0('https://www.planecrashinfo.com/', year, '/', year, '.htm')
+
+crash_page <- rvest::read_html(crash_url, encoding = "ISO-8859-1")
+
+
+crash_page |> 
+  rvest::html_elements("td:nth-child(1) > font > a") |> 
+  rvest::html_text2() -> dates
+
+crash_page |> 
+  rvest::html_elements("td:nth-child(2) > font") |> # removed a as no hyperlink for loc
+  rvest::html_text2() -> loc_op
+
+# skipped col 3 exactly same for time purposes
+
+crash_page |> 
+  rvest::html_elements("td:nth-child(4) > font") |> 
+  rvest::html_text2() -> fatalities
+
+
+df = data.frame(data.frame(dates = dates, loc = loc_op[-1], fatalities = fatalities[-1])) |> # have to drop column names for loc and fatalities
+  tidyr::separate(loc, into = c("location", "operation"), sep = "\n") |> 
+  tidyr::separate(fatalities, into = c("plane_fatalities", "pass", "ground_fatalities"))
+
+# not completely correct due to data types
+   
+```
