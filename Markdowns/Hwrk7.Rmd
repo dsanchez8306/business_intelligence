@@ -1,0 +1,56 @@
+---
+title: 'Assignment 7: Web Scraping the FSB Directory'
+author: "Dominic Sanchez"
+date: "2026-10-05"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_download: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r directory}
+dept_abbrv = c("Accountancy", "Economics", "Entrepreneurship", "Finance", "Information%20Systems%20--%20Analytics", "Marketing", "Management")
+
+#url_format: ("https://miamioh.edu/fsb/directory/?up=/query/all/all/DEPT????/all")
+
+directory_df = data.frame()
+
+for (dept in dept_abbrv){
+  url = paste0("https://miamioh.edu/fsb/directory/?up=/query/all/all/", dept, "/all")
+  
+  page = rvest::read_html(url)
+
+  page |> 
+    rvest::html_elements("strong a") |> 
+    rvest::html_text2() -> names
+  
+  page |> 
+    rvest::html_elements("i") |> 
+    rvest::html_text2() -> positions
+  
+  page |> 
+    rvest::html_elements("strong a") |> 
+    rvest::html_attr("href") -> websites
+  
+  
+  dept_df = data.frame(
+    department = dept, 
+    name = names, 
+    position = positions, 
+    website = websites
+    )
+  
+  directory_df = rbind(directory_df, dept_df)
+}
+
+head(directory_df)
+tail(directory_df) # checking the bottom as well
+
+```
