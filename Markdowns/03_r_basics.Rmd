@@ -34,6 +34,10 @@ crashes_by_day > 2000        # seven answers -- returns a table of booleans per 
 crashes_by_day
 
 sum(crashes_by_day > 2000)   # days above 2,000
+
+
+crashes_by_day[c(1:3)]
+crashes_by_day[c(1,3)]
 ```
 
 
@@ -43,11 +47,16 @@ sum(crashes_by_day > 2000)   # days above 2,000
 typeof(crashes_by_day)
 
 crashes_by_day_int = c(2020L, 2241L, 2327L, 2285L,
-                   2380L, 1866L, 1664L)
+                   2380L, 1866L, 1664L) # write integers with an L to convert to integer
 names(crashes_by_day_int) = c("Mon", "Tue", "Wed", "Thu",
                           "Fri", "Sat", "Sun")
 
 typeof(crashes_by_day_int)
+
+typeof(TRUE) # logical
+typeof(401L) # integer: the L
+typeof(401) # double: no L; can be used for dates as well
+typeof("401") # character: quotes
 ```
 
 
