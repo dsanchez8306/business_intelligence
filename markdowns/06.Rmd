@@ -27,37 +27,43 @@ dplyr::glimpse(run)
 ```
 
 
+Three steps, always: connect, read the table you want into a data frame, disconnect.
+
 ```{r db_connection}
 con = DBI::dbConnect(RSQLite::SQLite(),
                      "../data/scout.db")
-DBI::dbListTables(con)
-postings = DBI::dbReadTable(con, "scout_postings")
-DBI::dbDisconnect(con)
+DBI::dbListTables(con) # get list of table names
+postings = DBI::dbReadTable(con, "scout_postings") # read the specific table you want
+DBI::dbDisconnect(con) # disconnect from the database
 dplyr::glimpse(postings[, c("title", "company",
-  "location_state", "remote", "skills_json")])
-```
+  "location_state", "remote", "skills_json")]) # glimpse of the specific columns
 
-## usethis::edit_r_environ()
-
-```{r JSON_inside_cell}
 first_cell = postings$skills_json[1]
 cat(strtrim(first_cell, 60))   # base R: first 60 characters
 
-skills = jsonlite::fromJSON(first_cell)
+
+skills = jsonlite::fromJSON(first_cell) # read JSON text and convert it into an R object
 skills
+
+
+dplyr::glimpse(postings)
 ```
+
+## usethis::edit_r_environ()
 
 
 ```{r sql}
 con = DBI::dbConnect(RSQLite::SQLite(),
                      "../data/scout.db")
-top_remote = DBI::dbGetQuery(con, "
+
+#dbGetQuery - runs an SQL query and returns the results to R
+top_remote = DBI::dbGetQuery(con, " 
   SELECT company, COUNT(*) AS n
   FROM scout_postings
   WHERE remote = 1
   GROUP BY company
   ORDER BY n DESC
-  LIMIT 10")
+  LIMIT 10") # stop after 10 rows, return only first 10 results
 DBI::dbDisconnect(con)
 top_remote
 ```

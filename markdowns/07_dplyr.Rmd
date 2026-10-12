@@ -24,9 +24,11 @@ DBI::dbDisconnect(con)
 ```{r sql_dplyr}
 # Today: dplyr, on the data frame from dbReadTable()
 postings |> # pipe = then ; take postings, then
-  dplyr::filter(remote == 1) |> # filter by remote jobs, then
-  dplyr::count(company, sort = TRUE) |> # count by company
+  dplyr::filter(remote == 1) |> # filter by remote jobs, then...; also same as WHERE
+  dplyr::count(company, sort = TRUE) |> # count by company; same as doing GROUP BY + COUNT(*) + ORDER BY
   head(10) 
+
+# without count, it will filter and return all of the column names, but count() groups the remaining rows by company and counts the rows
 ```
 
 ```{r}
@@ -36,15 +38,13 @@ jobs = postings |>
 jobs
 
 jobs |>
-  dplyr::select(company, location_state, remote, posted_at, last_seen_at) |>
-  dplyr::filter(remote == 1) |>
+  dplyr::select(company, location_state, remote, posted_at, last_seen_at) |> # changes columns; use select(-column) to drop
+  dplyr::filter(remote == 1) |> # changes rows where a test is TRUE
   dplyr::mutate(days_open = as.numeric(as.Date(last_seen_at) - as.Date(posted_at))) |> # mutate creates new column, which this creates a column that says how many days the posting has been open for
-  dplyr::arrange(dplyr::desc(days_open)) |>
+  dplyr::arrange(dplyr::desc(days_open)) |> # changes order; sort by one or more columns; desc() for largest first
   dplyr::group_by(company) |>
-  dplyr::summarize(n = dplyr::n(), avg_days = mean(days_open))
+  dplyr::summarize(n = dplyr::n(), avg_days = mean(days_open)) # can use count() as a shortcut for n(), but would do summarize as also need to calculate mean
 ```
-
-
 
 # Answering the question about data types
 
@@ -62,10 +62,127 @@ jobs = postings |>
   dplyr::summarize(n = dplyr::n(), avg_days = mean(days_open))
 ```
 
-```{r helpers}
+
+### select()
+
+```{r select}
+con = DBI::dbConnect(RSQLite::SQLite(), "../data/scout.db")
+postings = DBI::dbReadTable(con, "scout_postings") |> tibble::as_tibble()
+DBI::dbDisconnect(con)
+
+jobs = postings |>
+  dplyr::select(company, title, location_state, remote, category, posted_at, last_seen_at)
+jobs
+```
+
+### filter()
+
+```{r filter}
+c(one_test = jobs |> dplyr::filter(remote == 1) |> nrow(),
+  both     = jobs |> dplyr::filter(remote == 1, location_state == "OH") |> nrow(),
+  either   = jobs |> dplyr::filter(remote == 1 | category == "internship") |> nrow(),
+  in_set   = jobs |> dplyr::filter(location_state %in% c("OH", "IN", "KY")) |> nrow()) # %in% tests membership in a set
+
+# can use is.na() to test for empty cell
+# column names don't go in quotations
+```
+
+### mutate()
+
+```{r mutate}
+# newnew = expression once per row from that row's cells
+
+jobs = jobs |>
+  dplyr::mutate(days_open = as.numeric(as.Date(last_seen_at) - as.Date(posted_at)))
+
+jobs |> dplyr::arrange(dplyr::desc(days_open)) |> dplyr::select(company, title, days_open)
+```
+
+#### Section Helpers and across()
+
+```{r section_helpers}
+dplyr::starts_with("location") # names that begin with the text; dplyr::ends_with() and dplyr::contains() work the same way
+
+dplyr::any_of(c("price", "beds")) # these names, if present; no error when one is missing
+
+dplyr::where(is.numeric) # every column of a type; dplyr::everything() is all remaining columns
+
+dplyr::across(dplyr::ends_with("_at"), as.Date) # inside mutate() or summarize(): one function applied to every matching column
+# lets you apply the same function to multiple columns at once
+
+dplyr::if_any(c(title, company), is.na) # inside filter(): one test over several columns
+```
+
+```{r across}
 jobs = jobs |> dplyr::mutate(dplyr::across(dplyr::ends_with("_at"), as.Date))    # both dates at once
 jobs |> dplyr::summarize(dplyr::across(dplyr::where(is.numeric), mean))
 ```
+
+```{r across2}
+# without across
+postings |>
+  dplyr::group_by(company) |>
+  dplyr::summarize(
+    avg_salary = mean(salary, na.rm = TRUE),
+    avg_bonus = mean(bonus, na.rm = TRUE)
+  )
+
+# with across
+postings |>
+  dplyr::group_by(company) |>
+  dplyr::summarize(
+    dplyr::across(
+      c(salary, bonus), # applies the mean function across multiple columns
+      mean,
+      na.rm = TRUE # ignore missing values
+    )
+  )
+```
+
+### group_by & summarize
+
+```{r group_summarize}
+jobs |>
+  dplyr::group_by(location_state) |>
+  dplyr::summarize(postings = dplyr::n(), remote_share = mean(remote)) |>
+  dplyr::arrange(dplyr::desc(postings))
+```
+
+
+### joins
+
+```{r joins}
+states = tibble::tibble(location_state = state.abb,
+                        state_name = state.name,
+                        region = as.character(state.region))
+
+# the key: location_state holds the same values, meaning the same thing, in both tables
+by_state |> dplyr::left_join(states, by = "location_state")    # keep every row on the left
+by_state |> dplyr::inner_join(states, by = "location_state")   # keep only the matches
+by_state |> dplyr::anti_join(states, by = "location_state")    # keep only the non-matches
+
+
+# join practice
+
+jobs |>
+  dplyr::left_join(states, by = "location_state") |>
+  dplyr::group_by(region) |>
+  dplyr::summarize(postings = dplyr::n(), remote_share = mean(remote)) |>
+  dplyr::arrange(dplyr::desc(postings))
+
+
+jobs |> dplyr::count(location_state) |> dplyr::anti_join(states, by = "location_state")
+
+```
+
+dplyr::left_join() - all left rows; NA where no match
+dplyr::inner_join() - matches only
+dplyr::anti_join() - left rows with no match
+dplyr::full_join() - everything from both sides
+
+When the key has different names, by = c("location_state" = "abb").
+
+
 
 
 ## Demo
@@ -135,7 +252,7 @@ dplyr::glimpse(listings)
 
 ```{r airbnb}
 # 1. how many listings per city
-##if answer is purely based on last class, i can group by city and then count the number of listings in each city
+## if answer is purely based on last class, i can group by city and then count the number of listings in each city
 
 listings |>  
   dplyr::group_by(city) |> 

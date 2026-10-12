@@ -1,0 +1,159 @@
+---
+title: 'Class 10: Web Scraping'
+author: "Dominic Sanchez"
+date: "2026-09-30"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_download: true
+    code_folding: show
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# robotstxt example: MU bulleting
+
+In the chunk below, we used the robotstxt package to check if we are allowed to write a program that scrapes the page: https://bulletin.miamioh.edu/courses-instruction/isa/.
+
+```{r}
+robotstxt::paths_allowed(
+  paths = "courses-instruction/isa/",
+  domain="https://bulletin.miamioh.edu/"
+)
+```
+
+Returns TRUE --> we are allowed to scrape it
+
+
+
+# robotstxt: Wikipedia
+
+```{r}
+robotstxt::paths_allowed(
+  paths = "/wiki/", domain = "https://en.wikipedia.org"
+    )
+```
+
+FALSE --> can't use it
+
+
+
+
+# robotstxt: Linkedin
+
+```{r}
+# In some cases, the robotstxt provides inconsistent answers
+# typically, you get a warning with the answer that is incorrect
+# solution: drop the trailing slash from the URL
+# even better check with the robots.txt (which is the ground truth)
+robotstxt::paths_allowed(
+  paths = "/jobs/", domain = "www.linkedin.com"
+    )
+```
+
+FALSE --> can't use it
+
+
+
+# Scrape Miami's Bulletin for ISA
+
+```{r}
+# checking whether we are allowed to scrape this info
+# This was done above and found to be TRUE
+
+# I will load the backend of the HTML into R using
+# [a] rvest::read_html() | sometimes rvest::read_html_live() if the page has some dynamic content
+# [b] in some cases, we will craft this as a request as shown in slides httr2::request() > .... > httr2::resp_body_html()
+isa_courses_in_r = rvest::read_html("https://bulletin.miamioh.edu/courses-instruction/isa/") # returns an HTML document
+
+# we will extract the course titles, which we can do in a single pipeline
+# given that they look the same on the rendered web page in Chrome
+# (bolded, same font size and same font type)
+
+# CSS selector was obtained by:
+# [a] highlighting what we wanted to pull (ISA 401 course title) in Chrome -> right click
+#  inspect -> right click > copy -> copy selector
+# [b] from this specific example, we were able to get just the title for ISA 401
+# because we had `:nth-child(24)` -> if you were to drop it --> you get all the course titles
+isa_courses_in_r |> 
+  rvest::html_elements("#sc_sccoursedescs > div > p.courseblocktitle > strong") |> # returns matching elements
+  rvest::html_text2() -> isa_titles
+  
+# course descriptions [using selector gadget, which does not always work]
+# but when it works it is easier
+
+isa_courses_in_r |> 
+  rvest::html_elements(".courseblockdesc") |> 
+  rvest::html_text2() -> isa_desc
+
+df = data.frame(title = isa_titles, description = isa_desc)
+```
+
+
+Selectors:
+#: select an element by its ID (#sc_sccoursedescs)
+.: select elements by their class (.courseblockdesc)
+no symbol: select by HTML tag name (p, strong, div)
+Space: find a descendant at any depth (div strong)
+>: find a direct child (div > p)
+div: every <div>
+div, p: every div and every p
+div p: every p inside a div, at any depth
+div > p: every p directly inside a div (one level)
+div + p: the p right after a div, same parent
+div ~ every p after a div, same parent
+.parent: every element with class = "parent"
+div.parent: every div with class parent
+.child.rebel: elements with both classes, child and rebel
+.parent .rebel: class rebel inside an element with class parent
+#p1: element with id="p1"
+
+
+example:
+#sc_sccoursedescs > div > p.courseblocktitle > strong
+1. find the element with this specific ID
+2. within that element, find the direct child that is a div
+3. within that div, find a direct child that is a div
+4. Within that paragraph, find its direct child strong element.
+
+but can do .courseblockdesc
+- if each course decscription has that class, you don't need to specify all parent elements
+
+
+Extract:
+after read_html and html_elements, can do either:
+  rvest::html_table() - returns a list of data frame; when webpage contains an HTML table with rows and columns
+  rvest::html_text2() - character vector of text;
+  rvest::html_attr("href") - character vector of attribute values
+  
+
+
+# wikipedia example
+
+```{r}
+wiki_url = "https://en.wikipedia.org/wiki/Miami_RedHawks_football"
+
+robotstxt::paths_allowed(paths = "/wiki/Miami_RedHawks_football",
+                         domain = "en.wikipedia.org", bot = "*")
+
+wiki_page = httr2::request(wiki_url) |>
+  httr2::req_user_agent("ISA 401 class scraper (your_email@miamioh.edu)") |>
+  httr2::req_perform() |>
+  httr2::resp_body_html()
+
+wiki_tables = wiki_page |>
+  rvest::html_elements("table.wikitable") |>
+  rvest::html_table()
+
+length(wiki_tables)
+
+bowl_games = wiki_tables[[4]]
+bowl_games
+```
+

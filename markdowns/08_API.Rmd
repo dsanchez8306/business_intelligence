@@ -18,13 +18,28 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Cincy Crashes
 
 ```{r API_connection}
-httr2::request("https://data.cincinnati-oh.gov/resource/rvmt-pkmq.json") |>
-  httr2::req_url_query("$limit" = 5) |>
-  httr2::req_perform() |>
-  httr2::resp_body_string() |>  # gets you a response text body in form of json
-  jsonlite::fromJSON() -> cincy_crashes # save into variable
+httr2::request("https://data.cincinnati-oh.gov/resource/rvmt-pkmq.json") |> # blue is the server, green is the path to one dataset on it; imputting the address
+  httr2::req_url_query("$limit" = 5) |> # query parameters: after the ? come name=value paris that the documentation defines; $limit=5 asks for five rows
+  httr2::req_perform() |> # only line that touches the network; everything before it only wrote the request; server checks validity of the request, then looks up five rows
+  httr2::resp_body_string() |>  # gets you a response text body in form of json; status code first
+  jsonlite::fromJSON() -> cincy_crashes # save into variable; converts JSON text into data frame
 ```
 
+
+other query parameters:
+$ limit - how many rows
+$ order - sorted how
+$ where - which rows
+$ select - which columns
+
+$ is part of the name on this server --> need it to avoid 400 (unrecognized arguments) error
+
+
+anatomy of the url: https://data.cincinnati-oh.gov/resource/rvmt-pkmq.json
+- https://data.cincinnati-oh.gov: whose computer/data site
+- /resource/rvmt-pkmq.json: path (endpoint) - which dataset on that server; rvmt-pkmq is the traffic crash table, .json is the format
+- ?$limit=5&$order=crashdate DESC: query parameters (name=value) -- look at API documentation for parameters
+- ? starts the question, & separates one parameter from the next
 
 
 ## Fred API Example
@@ -83,7 +98,7 @@ ohio_jobs_sep_2026_df = ohio_jobs_sep_2026$observations
 ```{r usajobs}
 httr2::request("https://data.usajobs.gov/api/search") |>
   httr2::req_url_query(Keyword = "Data Analyst", ResultsPerPage = 500) |>
-  httr2::req_headers(
+  httr2::req_headers( # headers: name and value pairs that travel with teh request but are not part of the address (key goes here)
     Host = "data.usajobs.gov",
     "User-Agent" = "sanchedr@miamioh.edu",
     "Authorization-Key" = Sys.getenv("USAJOBS_API_KEY") # this site wants us to pass the API key as a header

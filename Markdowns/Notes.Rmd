@@ -2392,6 +2392,8 @@ crashes_df = tibble::tibble(
   crashes = crashes_by_day,
   busy    = crashes_by_day > 2000)
 
+# typeof(c(2020, "2241", 2327)) returns character; even one quotation turns it all into characters
+
 crashes_df$crashes                     # one column, as a vector
 
 crashes_df[["crashes"]]                # the same vector, by name
@@ -2527,3 +2529,781 @@ writexl::write_xlsx(ohio_postings,
   "../data/ohio_job_postings.xlsx")
 ```
 
+
+
+
+
+# SQL Database
+
+
+Three steps, always: connect, read the table you want into a data frame, disconnect.
+
+```{r db_connection}
+con = DBI::dbConnect(RSQLite::SQLite(),
+                     "../data/scout.db")
+DBI::dbListTables(con) # get list of table names
+postings = DBI::dbReadTable(con, "scout_postings") # read the specific table you want
+DBI::dbDisconnect(con) # disconnect from the database
+dplyr::glimpse(postings[, c("title", "company",
+  "location_state", "remote", "skills_json")]) # glimpse of the specific columns
+
+first_cell = postings$skills_json[1]
+cat(strtrim(first_cell, 60))   # base R: first 60 characters
+
+
+skills = jsonlite::fromJSON(first_cell) # read JSON text and convert it into an R object
+skills
+
+
+dplyr::glimpse(postings)
+```
+
+
+## Running a SQL query by creating a connection, then sending a query
+
+```{r sql}
+con = DBI::dbConnect(RSQLite::SQLite(),
+                     "../data/scout.db")
+
+#dbGetQuery - runs an SQL query and returns the results to R
+top_remote = DBI::dbGetQuery(con, " 
+  SELECT company, COUNT(*) AS n
+  FROM scout_postings
+  WHERE remote = 1
+  GROUP BY company
+  ORDER BY n DESC
+  LIMIT 10") # stop after 10 rows, return only first 10 results
+DBI::dbDisconnect(con)
+top_remote
+```
+
+
+```{r other_sql}
+length(unique(chicago$neighbourhood)) # length of distinct neighborhoods
+sum(listings$host_is_superhost == "t", na.rm = TRUE) # ignore NAs
+sum(listings$price > 1000)
+```
+
+for an app --> usethis::edit_r_environ()
+- edit API key
+
+7. A few R concepts worth remembering
+
+| = | Assigns a value to a variable or function argument in your code. |
+| $ | Accesses a named component of an object, such as qc$server or vals$df. |
+| () | Calls a function. For example, vals$df() calls the function or reactive accessor named df on vals. |
+| %||% | Uses a fallback value when the left-hand value is NULL. |
+| list() | Creates a list of values, such as the options supplied to renderDT(). |
+| "\n" | Represents a newline character. |
+| renderText() | Creates text for a Shiny output. |
+| renderDT() | Creates an interactive data-table output. |
+
+Your UI defines where the title, table, SQL, and About information appear. Your server supplies the dynamic title, listing data, and SQL text to the corresponding UI placeholders. The querychat object connects the conversational interface to the underlying database-query process.
+
+
+
+
+# dplyr
+
+```{r setup}
+con = DBI::dbConnect(RSQLite::SQLite(), "../data/scout.db")
+postings = DBI::dbReadTable(con, "scout_postings") |> tibble::as_tibble()
+DBI::dbDisconnect(con)
+```
+
+```{r sql_dplyr}
+# Today: dplyr, on the data frame from dbReadTable()
+postings |> # pipe = then ; take postings, then
+  dplyr::filter(remote == 1) |> # filter by remote jobs, then...; also same as WHERE
+  dplyr::count(company, sort = TRUE) |> # count by company; same as doing GROUP BY + COUNT(*) + ORDER BY
+  head(10) 
+
+# without count, it will filter and return all of the column names, but count() groups the remaining rows by company and counts the rows
+```
+
+```{r}
+# can do variable = jobs |>  and set the variable to the output of the query
+jobs = postings |>
+  dplyr::select(company, title, location_state, remote, category, posted_at, last_seen_at)
+jobs
+
+jobs |>
+  dplyr::select(company, location_state, remote, posted_at, last_seen_at) |> # changes columns; use select(-column) to drop
+  dplyr::filter(remote == 1) |> # changes rows where a test is TRUE
+  dplyr::mutate(days_open = as.numeric(as.Date(last_seen_at) - as.Date(posted_at))) |> # mutate creates new column, which this creates a column that says how many days the posting has been open for
+  dplyr::arrange(dplyr::desc(days_open)) |> # changes order; sort by one or more columns; desc() for largest first
+  dplyr::group_by(company) |>
+  dplyr::summarize(n = dplyr::n(), avg_days = mean(days_open)) # can use count() as a shortcut for n(), but would do summarize as also need to calculate mean
+```
+
+# Answering the question about data types
+
+```{r}
+jobs = postings |>
+  dplyr::select(company, location_state, remote, posted_at, last_seen_at) |>
+  dplyr::filter(remote == 1) |>
+  dplyr::mutate(
+    posted_at = as.Date(posted_at), # force change the column into date format
+    last_seen_at = as.Date(last_seen_at),
+    days_open = as.numeric(last_seen_at - posted_at)
+    ) |> 
+  dplyr::arrange(dplyr::desc(days_open)) |> 
+  dplyr::group_by(company) |>
+  dplyr::summarize(n = dplyr::n(), avg_days = mean(days_open))
+```
+
+
+### select()
+
+```{r select}
+con = DBI::dbConnect(RSQLite::SQLite(), "../data/scout.db")
+postings = DBI::dbReadTable(con, "scout_postings") |> tibble::as_tibble()
+DBI::dbDisconnect(con)
+
+jobs = postings |>
+  dplyr::select(company, title, location_state, remote, category, posted_at, last_seen_at)
+jobs
+```
+
+### filter()
+
+```{r filter}
+c(one_test = jobs |> dplyr::filter(remote == 1) |> nrow(),
+  both     = jobs |> dplyr::filter(remote == 1, location_state == "OH") |> nrow(),
+  either   = jobs |> dplyr::filter(remote == 1 | category == "internship") |> nrow(),
+  in_set   = jobs |> dplyr::filter(location_state %in% c("OH", "IN", "KY")) |> nrow()) # %in% tests membership in a set
+
+# can use is.na() to test for empty cell
+# column names don't go in quotations
+```
+
+### mutate()
+
+```{r mutate}
+# newnew = expression once per row from that row's cells
+
+jobs = jobs |>
+  dplyr::mutate(days_open = as.numeric(as.Date(last_seen_at) - as.Date(posted_at)))
+
+jobs |> dplyr::arrange(dplyr::desc(days_open)) |> dplyr::select(company, title, days_open)
+```
+
+#### Section Helpers and across()
+
+```{r section_helpers}
+dplyr::starts_with("location") # names that begin with the text; dplyr::ends_with() and dplyr::contains() work the same way
+
+dplyr::any_of(c("price", "beds")) # these names, if present; no error when one is missing
+
+dplyr::where(is.numeric) # every column of a type; dplyr::everything() is all remaining columns
+
+dplyr::across(dplyr::ends_with("_at"), as.Date) # inside mutate() or summarize(): one function applied to every matching column
+# lets you apply the same function to multiple columns at once
+
+dplyr::if_any(c(title, company), is.na) # inside filter(): one test over several columns
+```
+
+```{r across}
+jobs = jobs |> dplyr::mutate(dplyr::across(dplyr::ends_with("_at"), as.Date))    # both dates at once
+jobs |> dplyr::summarize(dplyr::across(dplyr::where(is.numeric), mean))
+```
+
+```{r across2}
+# without across
+postings |>
+  dplyr::group_by(company) |>
+  dplyr::summarize(
+    avg_salary = mean(salary, na.rm = TRUE),
+    avg_bonus = mean(bonus, na.rm = TRUE)
+  )
+
+# with across
+postings |>
+  dplyr::group_by(company) |>
+  dplyr::summarize(
+    dplyr::across(
+      c(salary, bonus), # applies the mean function across multiple columns
+      mean,
+      na.rm = TRUE # ignore missing values
+    )
+  )
+```
+
+### group_by & summarize
+
+```{r group_summarize}
+jobs |>
+  dplyr::group_by(location_state) |>
+  dplyr::summarize(postings = dplyr::n(), remote_share = mean(remote)) |>
+  dplyr::arrange(dplyr::desc(postings))
+```
+
+
+### joins
+
+```{r joins}
+states = tibble::tibble(location_state = state.abb,
+                        state_name = state.name,
+                        region = as.character(state.region))
+
+# the key: location_state holds the same values, meaning the same thing, in both tables
+by_state |> dplyr::left_join(states, by = "location_state")    # keep every row on the left
+by_state |> dplyr::inner_join(states, by = "location_state")   # keep only the matches
+by_state |> dplyr::anti_join(states, by = "location_state")    # keep only the non-matches
+
+
+# join practice
+
+jobs |>
+  dplyr::left_join(states, by = "location_state") |>
+  dplyr::group_by(region) |>
+  dplyr::summarize(postings = dplyr::n(), remote_share = mean(remote)) |>
+  dplyr::arrange(dplyr::desc(postings))
+
+
+jobs |> dplyr::count(location_state) |> dplyr::anti_join(states, by = "location_state")
+
+```
+
+dplyr::left_join() - all left rows; NA where no match
+dplyr::inner_join() - matches only
+dplyr::anti_join() - left rows with no match
+dplyr::full_join() - everything from both sides
+
+When the key has different names, by = c("location_state" = "abb").
+
+
+
+
+
+# API Keys
+
+## Cincy Crashes
+
+```{r API_connection}
+httr2::request("https://data.cincinnati-oh.gov/resource/rvmt-pkmq.json") |> # blue is the server, green is the path to one dataset on it; imputting the address
+  httr2::req_url_query("$limit" = 5) |> # query parameters: after the ? come name=value paris that the documentation defines; $limit=5 asks for five rows
+  httr2::req_perform() |> # only line that touches the network; everything before it only wrote the request; server checks validity of the request, then looks up five rows
+  httr2::resp_body_string() |>  # gets you a response text body in form of json; status code first
+  jsonlite::fromJSON() -> cincy_crashes # save into variable; converts JSON text into data frame
+```
+
+
+other query parameters:
+$ limit - how many rows
+$ order - sorted how
+$ where - which rows
+$ select - which columns
+
+$ is part of the name on this server --> need it to avoid 400 (unrecognized arguments) error
+
+
+anatomy of the url: https://data.cincinnati-oh.gov/resource/rvmt-pkmq.json
+- https://data.cincinnati-oh.gov: whose computer/data site
+- /resource/rvmt-pkmq.json: path (endpoint) - which dataset on that server; rvmt-pkmq is the traffic crash table, .json is the format
+- ?$limit=5&$order=crashdate DESC: query parameters (name=value) -- look at API documentation for parameters
+- ? starts the question, & separates one parameter from the next
+
+
+
+
+## Fred API Example
+
+```{r fred}
+httr2::request("https://api.stlouisfed.org/fred/series/observations") |>
+  httr2::req_url_query(
+    series_id = "IHLIDXUSOH",
+    api_key = Sys.getenv("FRED_API_KEY"),
+    file_type = "json"
+  ) |> # will return a url with the API key and other requests
+  # nothing has been sent yet
+  httr2::req_perform() |>
+  httr2::resp_body_string() |>
+  jsonlite::fromJSON() -> ohio_jobs # list of 13 items, data is under the item "observations"
+
+
+
+jobs_df <- ohio_jobs[[13]] # filter down to observations which is the last item in the list
+# can do dplyr::glimpse(ohio_jobs) to view list values
+# can do names(ohio_jobs) to get a list with indexes of the names
+
+
+# to get data from Sept 1, 2026
+
+# (a) to get all the data and then filter the rows that I want
+## not the most efficient but correct
+dplyr::glimpse(jobs_df)
+jobs_df |> 
+  dplyr::mutate( # need to set the date as a date; date was a character, overwrote it into a data column
+    date = lubridate::ymd(date)  # must have tidyverse for this function
+  ) |>
+  dplyr::filter(date >= '2026-09-01') -> jobs_df_mod
+
+# (b) use the API since it had observation_start
+httr2::request("https://api.stlouisfed.org/fred/series/observations") |>
+  httr2::req_url_query(
+    series_id = "IHLIDXUSOH",
+    api_key = Sys.getenv("FRED_API_KEY"),
+    file_type = "json",
+    observation_start = "2026-09-01" # filter to start at september 9, 2026
+  ) |> # will return a url with the API key and other requests
+  # nothing has been sent yet
+  httr2::req_perform() |>
+  httr2::resp_body_string() |>
+  jsonlite::fromJSON() -> ohio_jobs_sep_2026 # list of 13 variables
+
+ohio_jobs_sep_2026_df = ohio_jobs_sep_2026$observations
+
+```
+
+
+
+
+
+## USA Jobs API
+
+```{r usajobs}
+httr2::request("https://data.usajobs.gov/api/search") |>
+  httr2::req_url_query(Keyword = "Data Analyst", ResultsPerPage = 500) |>
+  httr2::req_headers( # headers: name and value pairs that travel with teh request but are not part of the address (key goes here)
+    Host = "data.usajobs.gov",
+    "User-Agent" = "sanchedr@miamioh.edu",
+    "Authorization-Key" = Sys.getenv("USAJOBS_API_KEY") # this site wants us to pass the API key as a header
+  ) |>
+  httr2::req_perform() |>
+  httr2::resp_body_string() |>
+  jsonlite::fromJSON(flatten = TRUE) -> usa_jobs_list
+
+# 401 error
+
+usa_df <- usa_jobs_list$SearchResult$SearchResultItems
+
+jobs_small = usa_df |>
+  dplyr::select(
+    title = MatchedObjectDescriptor.PositionTitle,
+    department = MatchedObjectDescriptor.DepartmentName,
+    agency = MatchedObjectDescriptor.OrganizationName,
+    location = MatchedObjectDescriptor.PositionLocationDisplay,
+    closes = MatchedObjectDescriptor.ApplicationCloseDate
+  )
+
+```
+
+```{r usajobs_questions}
+## answer based on query
+nrow(jobs_small)
+# returns a named vector)
+table(jobs_small$department) |>  sort(decreasing = T) |>  head(3)
+# returns a df
+jobs_small |>  dplyr::count(department) |>  dplyr::arrange(dplyr::desc(n)) |>  head(3)
+
+
+index_data_analyst = jobs_small$title |> 
+  stringr::str_detect(pattern = 'Data Analyst|Data Analytics')
+
+jobs = jobs_small[index_data_analyst, ]
+table(jobs$department)
+
+```
+
+
+
+
+
+
+
+# Web scraping
+
+## robotstxt example: MU bulleting
+
+In the chunk below, we used the robotstxt package to check if we are allowed to write a program that scrapes the page: https://bulletin.miamioh.edu/courses-instruction/isa/.
+
+```{r}
+robotstxt::paths_allowed(
+  paths = "courses-instruction/isa/",
+  domain="https://bulletin.miamioh.edu/"
+)
+```
+
+Returns TRUE --> we are allowed to scrape it
+
+
+
+## robotstxt: Wikipedia
+
+```{r}
+robotstxt::paths_allowed(
+  paths = "/wiki/", domain = "https://en.wikipedia.org"
+    )
+```
+
+FALSE --> can't use it
+
+
+
+
+## robotstxt: Linkedin
+
+```{r}
+# In some cases, the robotstxt provides inconsistent answers
+# typically, you get a warning with the answer that is incorrect
+# solution: drop the trailing slash from the URL
+# even better check with the robots.txt (which is the ground truth)
+robotstxt::paths_allowed(
+  paths = "/jobs/", domain = "www.linkedin.com"
+    )
+```
+
+FALSE --> can't use it
+
+
+
+## Scrape Miami's Bulletin for ISA
+
+```{r}
+# checking whether we are allowed to scrape this info
+# This was done above and found to be TRUE
+
+# I will load the backend of the HTML into R using
+# [a] rvest::read_html() | sometimes rvest::read_html_live() if the page has some dynamic content
+# [b] in some cases, we will craft this as a request as shown in slides httr2::request() > .... > httr2::resp_body_html()
+isa_courses_in_r = rvest::read_html("https://bulletin.miamioh.edu/courses-instruction/isa/") # returns an HTML document
+
+# we will extract the course titles, which we can do in a single pipeline
+# given that they look the same on the rendered web page in Chrome
+# (bolded, same font size and same font type)
+
+# CSS selector was obtained by:
+# [a] highlighting what we wanted to pull (ISA 401 course title) in Chrome -> right click
+#  inspect -> right click > copy -> copy selector
+# [b] from this specific example, we were able to get just the title for ISA 401
+# because we had `:nth-child(24)` -> if you were to drop it --> you get all the course titles
+isa_courses_in_r |> 
+  rvest::html_elements("#sc_sccoursedescs > div > p.courseblocktitle > strong") |> # returns matching elements
+  rvest::html_text2() -> isa_titles
+  
+# course descriptions [using selector gadget, which does not always work]
+# but when it works it is easier
+
+isa_courses_in_r |> 
+  rvest::html_elements(".courseblockdesc") |> 
+  rvest::html_text2() -> isa_desc
+
+df = data.frame(title = isa_titles, description = isa_desc)
+```
+
+
+Selectors:
+#: select an element by its ID (#sc_sccoursedescs)
+.: select elements by their class (.courseblockdesc)
+no symbol: select by HTML tag name (p, strong, div)
+Space: find a descendant at any depth (div strong)
+>: find a direct child (div > p)
+div: every <div>
+div, p: every div and every p
+div p: every p inside a div, at any depth
+div > p: every p directly inside a div (one level)
+div + p: the p right after a div, same parent
+div ~ every p after a div, same parent
+.parent: every element with class = "parent"
+div.parent: every div with class parent
+.child.rebel: elements with both classes, child and rebel
+.parent .rebel: class rebel inside an element with class parent
+#p1: element with id="p1"
+
+
+example:
+#sc_sccoursedescs > div > p.courseblocktitle > strong
+1. find the element with this specific ID
+2. within that element, find the direct child that is a div
+3. within that div, find a direct child that is a div
+4. Within that paragraph, find its direct child strong element.
+
+but can do .courseblockdesc
+- if each course decscription has that class, you don't need to specify all parent elements
+
+
+Extract:
+after read_html and html_elements, can do either:
+  rvest::html_table() - returns a list of data frame; when webpage contains an HTML table with rows and columns
+  rvest::html_text2() - character vector of text;
+  rvest::html_attr("href") - character vector of attribute values
+  
+
+
+## wikipedia example
+
+```{r}
+wiki_url = "https://en.wikipedia.org/wiki/Miami_RedHawks_football"
+
+robotstxt::paths_allowed(paths = "/wiki/Miami_RedHawks_football",
+                         domain = "en.wikipedia.org", bot = "*")
+
+wiki_page = httr2::request(wiki_url) |>
+  httr2::req_user_agent("ISA 401 class scraper (your_email@miamioh.edu)") |>
+  httr2::req_perform() |>
+  httr2::resp_body_html()
+
+wiki_tables = wiki_page |>
+  rvest::html_elements("table.wikitable") |>
+  rvest::html_table()
+
+length(wiki_tables)
+
+bowl_games = wiki_tables[[4]]
+bowl_games
+```
+
+
+
+# Web scraping multiple pages
+
+## Re-examining the bulletin example
+
+Let us try to expand on the example from last class to include the following:
+[ACC](https://bulletin.miamioh.edu/courses-instruction/acc/),
+[BUS](https://bulletin.miamioh.edu/courses-instruction/bus/),
+[ISA](https://bulletin.miamioh.edu/courses-instruction/isa/),
+[MKT](https://bulletin.miamioh.edu/courses-instruction/mkt/)
+
+
+**COMMENT:** Obviously, you can repeat your code few times with changing the URL. This will 
+work for a few links, but would be quite tedious for large amounts of scraping. We will follow the 
+**DRY Principle**, which stands for **Don't Repeat Yourself**.
+
+
+```{r directory}
+dept_abbrv = c("Accountancy", "Economics", "Entrepreneurship", "Finance", "Information%20Systems%20--%20Analytics", "Marketing", "Management")
+
+#url_format: ("https://miamioh.edu/fsb/directory/?up=/query/all/all/DEPT????/all")
+
+directory_df = data.frame()
+
+for (dept in dept_abbrv){
+  url = paste0("https://miamioh.edu/fsb/directory/?up=/query/all/all/", dept, "/all")
+  
+  page = rvest::read_html(url)
+
+  page |> 
+    rvest::html_elements("strong a") |> 
+    rvest::html_text2() -> names
+  
+  page |> 
+    rvest::html_elements("i") |> 
+    rvest::html_text2() -> positions
+  
+  page |> 
+    rvest::html_elements("strong a") |> 
+    rvest::html_attr("href") -> websites
+  
+  
+  dept_df = data.frame(
+    department = dept, 
+    name = names, 
+    position = positions, 
+    website = websites
+    )
+  
+  directory_df = rbind(directory_df, dept_df)
+}
+
+head(directory_df)
+tail(directory_df) # checking the bottom as well
+
+```
+
+
+
+## `purrr` approach for the same problem
+
+This is a functional programming approach, and we will write our own function. In R, we use the
+function called `function` to create a function (def in python). As opposed to Python, R functions return a single objects.
+
+```{r purrr}
+dept_abbrv = c('acc', 'bus', 'isa', 'mkt')
+
+# This function takes an abbreviastion as an input and returns a data_frame as an output
+scrape_mu_bulletin = function(dept){
+  bulletin_url = paste0(
+    'https://bulletin.miamioh.edu/courses-instruction/', dept, '/'
+  )
+  
+  webpage = rvest::read_html(bulletin_url)
+  
+  webpage |> rvest::html_elements("p.courseblocktitle") |> rvest::html_text2() -> titles
+  
+  webpage |> rvest::html_elements("p.courseblockdesc") |> rvest::html_text2() -> descs
+  
+  df = data.frame(title = titles, desc = descs)
+  return(df)
+}
+
+test = scrape_mu_bulletin(dept = 'eco')
+
+# to use functions from purrr, we will use a map_*(), or map2_*(), or a pmap_*(); * = something
+# map uses a function that takes a single input (or you are only changing a single input)
+# map2 uses a function that takes two inputs
+# pmap >= 3
+# after the _, you put the type of object you are getting back
+
+# the .x is the vector that we will iterate over
+# and the .f is the function that we will use
+
+
+courses_df_from_purrr = purrr::map_df(.x = dept_abbrv, .f = scrape_mu_bulletin)
+```
+
+
+
+
+
+
+# Ellmer data extraction 
+
+```{r structured_data}
+type_course = ellmer::type_object(
+  code = ellmer::type_string(
+    "Subject and number. For example, ISA 401"
+  ),
+  name = ellmer::type_string(
+    "Name of the course, without the code"
+  ),
+  credit_hours = ellmer::type_integer(
+    "The number in parentheses after the name",
+    required = FALSE
+  ),
+  prereqs = ellmer::type_string(
+    "The prerequisite[s] for this course",
+    required = FALSE
+  )
+)
+```
+
+
+## ISA 125 Extraction
+
+```{r isa125}
+chat = ellmer::chat_openai(
+  model = "gpt-5.6-luna"
+)
+
+isa125_courseblock = rvest::read_html("https://bulletin.miamioh.edu/courses-instruction/isa/") |> 
+  
+  rvest::html_elements("#sc_sccoursedescs > div:nth-child(1)") |> 
+  rvest::html_text2()
+
+chat$chat_structured(
+  isa125_courseblock,
+  type = ellmer::type_object(
+    # code is the name of the first element in the returned sublist
+    # type_string -> forces that element to be of type chr
+    code = ellmer::type_string(
+      description = "The three letter abbreviation for the course and its number, for example: ISA 999 or FIN 444"
+    ),
+    name = ellmer::type_string(
+      description = "The title of the course without the three letter abbreviation and the number. For example, Introduction to Macroeconomics. Do not return a period after the name"
+    ),
+    cr_hr = ellmer::type_integer(
+      description = "The number of credits shown in the parantheses after the course code and title")
+  )
+)
+```
+
+
+## All 50 ISA Courses
+
+```{r all_isa_courses}
+course_vec = rvest::read_html("https://bulletin.miamioh.edu/courses-instruction/isa/") |> 
+  rvest::html_elements(".courseblock") |>  rvest::html_text2()
+
+# similar to https://ellmer.tidyverse.org/articles/structured-data.html
+course_list = as.list(course_vec) # make it a list
+
+type_course = ellmer::type_object(
+    # code is the name of the first element in the returned sublist
+    # type_string -> forces that element to be of type chr
+    code = ellmer::type_string(
+      description = "The three letter abbreviation for the course and its number, for example: ISA 999 or FIN 444"
+    ),
+    name = ellmer::type_string(
+      description = "The title of the course without the three letter abbreviation and the number. For example, Introduction to Macroeconomics. Do not return a period after the name"
+    ),
+    cr_hr = ellmer::type_integer(
+      description = "The number of credits shown in the parantheses after the course code and title")
+  )
+
+isa_df = ellmer::parallel_chat_structured(
+  chat = chat, 
+  prompts = course_list,
+  type = type_course,
+  
+  include_tokens = T,
+  include_cost = T
+)
+
+sum(isa_df$cost)
+```
+
+
+
+
+# Tidy
+
+```{r}
+year = 2025
+
+crash_url = paste0('https://www.planecrashinfo.com/', year, '/', year, '.htm')
+
+# the encoding came from chatisa as shown in class 12
+crash_page <- rvest::read_html(crash_url, encoding = "ISO-8859-1")
+
+crash_page |> 
+  # selector from inspector (kept the last three parts of the selector)
+  # note the output (we also dropped :nth-child(8) in tr since we want all rows)
+  rvest::html_elements("tr > td:nth-child(1) > font") |> 
+  rvest::html_text2() -> date_col
+
+crash_page |> 
+  # repeat for location_operator
+  rvest::html_elements("tr > td:nth-child(2) > font") |> # removed a as no hyperlink for loc
+  rvest::html_text2() -> location_operator
+
+crash_page |> 
+  # repeat for aircraft_reg
+  rvest::html_elements("tr > td:nth-child(3) > font") |> 
+  rvest::html_text2() -> aircraft_reg
+
+crash_page |> 
+  # repeat for fatalities
+  rvest::html_elements("tr > td:nth-child(4) > font") |> 
+  rvest::html_text2() -> fatalities
+
+# note that the number elements in the four vectors are not equal
+df = data.frame(
+  date_col = date_col, 
+  # -1 drops the first row that had the col header
+  location_operator = location_operator[-1],
+  aircraft_reg = aircraft_reg[-1],
+  fatalities = fatalities[-1] # have to drop column names for loc and fatalities
+)
+
+# make this tidy
+
+df |> 
+  tidyr::separate(col = location_operator, into = c("location", "operator"), sep = "\n") |> 
+  tidyr::separate(col = aircraft_reg, into = c("aircraft", "registeration"), sep = "\n") |> 
+  tidyr::separate(col = fatalities, into = c("air_fatalities", "num_pass", "ground_fatalities")) -> tidy_df
+
+
+
+# not technically correct --> correct types
+
+crash_clean = df |>
+  dplyr::mutate(
+    date = lubridate::dmy(date),
+    dplyr::across(c(air_fatalities, passengers, ground),
+                  as.integer)
+  )
+
+dplyr::glimpse(crash_clean)
+```

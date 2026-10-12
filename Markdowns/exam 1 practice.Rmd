@@ -1,0 +1,47 @@
+---
+title: "exam 1 practice"
+author: "Dominic Sanchez"
+date: "2026-10-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Q4
+
+```{r}
+hipb <- jsonlite::fromJSON("../data/hibp_data.json")
+dplyr::glimpse(hipb)
+
+hipb$BreachName[500]
+
+sum(hipb$Email |>  endsWith("@miamioh.edu"), na.rm = TRUE)
+
+hipb |>  
+  dplyr::filter(email )
+
+hipb |> 
+  dplyr::filter(dplyr::ends_with(Email, "@miamioh.edu")) -> miamiemail
+miamiemail
+
+miamiemail <- hipb |>
+  dplyr::select(dplyr::ends_with("@miamioh.edu"))
+miamiemail
+
+miamiemail <- hipb |>
+  dplyr::filter(endsWith(Email, "@miamioh.edu"))
+
+nrow(miamiemail)
+
+```
+
+
+
+```{r}
+robotstxt::paths_allowed(
+  paths = "/wiki/Miami_University", domain = "https://en.wikipedia.org"
+    )
+```
