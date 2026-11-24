@@ -20,3 +20,14 @@ arules::summary(skill_rules)
 arules::inspect(skill_rules)
 
 arules::sort(skill_rules, by = 'lift', decreasing = TRUE)[1:3] |> arules::inspect()
+
+# internal to arulesViz, hence the :::
+arulesViz:::plot.rules(skill_rules,
+                       measure = c('support', 'lift'),
+                       shading = 'confidence')
+
+
+item_freq = arules::itemFrequency(skills)
+round(item_freq["excel"],3)
+
+arules::itemFrequency(skills)["excel"]
